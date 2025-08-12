@@ -1,0 +1,64 @@
+import { Injectable } from "@nestjs/common";
+import { Cron } from "@nestjs/schedule";
+import { AxiosRequestConfig } from "axios";
+import { CAppService } from "src/common/services/app.service";
+import { CErrorsService } from "src/common/services/errors.service";
+import { CNetworkService } from "src/common/services/network.service";
+import { CGuide } from "src/model/entities/guide";
+import { CSetting } from "src/model/entities/setting";
+import { DataSource } from "typeorm";
+
+interface ITwitterScoreResponse {
+    readonly success: boolean;
+    readonly username: string;
+    readonly twitter_id: string;
+    readonly twitter_score: number;
+}
+
+@Injectable()
+export class CTwitterScoreAutoService {
+    private busy: boolean = false;
+
+    constructor(
+        private dataSource: DataSource,
+        private networkService: CNetworkService,
+        private appService: CAppService,
+        private errorsService: CErrorsService,
+    ) {}
+
+    @Cron('0 0 * * * *') // every hour
+    private async update(): Promise<void> {
+        try {
+            if (this.busy) { // previous process not finished? %-)
+                return;
+            }
+
+            this.busy = true;
+            const key = (await this.dataSource.getRepository(CSetting).findOne({where: {p: "tws-key"}}))?.v;     
+            const urlTemplate = (await this.dataSource.getRepository(CSetting).findOne({where: {p: "tws-url"}}))?.v;     
+
+            if (!key || !urlTemplate) {
+                throw "Twitter score setting not found";
+            }
+
+            const guides = await this.dataSource.getRepository(CGuide).find({where: {active: true}, select: ["id", "twitter_score", "twitter_username"]});
+
+            for (let guide of guides) {
+                const url = urlTemplate
+                    .replace(/{{key}}/g, key)
+                    .replace(/{{name}}/g, guide.twitter_username);
+                const options: AxiosRequestConfig = {headers: {'User-Agent':'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.95 Safari/537.36'}};
+                const res = await this.networkService.get(url, options);                
+                const data = res.data as ITwitterScoreResponse;
+                guide.twitter_score = data.twitter_score;
+                await this.dataSource.getRepository(CGuide).save(guide);
+                await this.appService.pause(1000);
+            }
+
+            this.busy = false;
+        } catch (err) {
+            await this.errorsService.log("CTwitterScoreAutoService.update", err);
+            this.busy = false;
+        }
+    }
+}
