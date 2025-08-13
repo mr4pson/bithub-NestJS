@@ -34,25 +34,30 @@ export interface IEncryptionConfig {
   readonly iv: string;
 }
 
-const env = process.env.env;
+// const env = process.env.env;
+const env = 'dev';
 const configs: IKeyValue<IConfig> = {
   dev: {
-    mainsiteUrl: 'https://app.bithab.vio.net.ua',
-    adminUrl: 'https://admin.bithab.vio.net.ua',
-    backUrl: 'https://back.bithab.vio.net.ua',
+    mainsiteUrl: 'http://localhost:4200',
+    adminUrl: 'http://localhost:4200',
+    backUrl: 'http://localhost:3030',
     corsedUrls: [
       'https://admin.bithab.vio.net.ua',
       'https://app.bithab.vio.net.ua',
       'https://bithab.vio.net.ua',
+      'http://localhost:4200',
     ],
     //dbHost: "localhost",
-    dbHost: '185.151.245.92',
+    // dbHost: '185.151.245.92',
+    dbHost: '83.166.245.182',
     dbPort: 3306,
     //dbName: "bithab",
     dbName: 'mario',
-    dbLogin: 'vio',
+    // dbLogin: 'vio',
+    dbLogin: 'test',
     //dbPassword: "jid99deq", //
-    dbPassword: 'Vaiory36fix',
+    // dbPassword: 'Vaiory36fix',
+    dbPassword: 'Qwerty123$',
     appPort: 3030,
     wsPort: 3031,
     jwtAdmin: {
