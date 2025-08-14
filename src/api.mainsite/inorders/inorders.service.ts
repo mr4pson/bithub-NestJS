@@ -61,7 +61,7 @@ export class CInordersService {
       console.log(`nowpayments-ipn-received ${new Date()}`);
       console.log(dto);
       // Получаем IPN secret из env
-      const secret = process.env.NOWPAYMENTS_IPN_SECRET;
+      const secret = cfg.onepayIpnSecret;
       if (!secret) throw 'NOWPayments IPN secret not found';
 
       // Рекурсивная сортировка объекта по ключам
@@ -151,7 +151,7 @@ export class CInordersService {
       success_url: `${cfg.mainsiteUrl}/${langSlug}/payment-success`,
       cancel_url: `${cfg.mainsiteUrl}/${langSlug}/payment-fail`,
     };
-    const headers = { 'x-api-key': `WRWTMCZ-820MJ9A-J5Q9XAQ-Y94JXPJ` };
+    const headers = { 'x-api-key': cfg.onepayApiKey };
     const res = await this.networkService.post(url, payload, { headers });
     const paymentData = res.data as INowPaymentsPayment;
 
