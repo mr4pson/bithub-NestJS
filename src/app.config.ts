@@ -111,8 +111,8 @@ const configs: IKeyValue<IConfig> = {
     // при старте можно отправить настройки вебхука в телеграм, но вебхук должен быть один, поэтому надо следить, чтобы разные копии не перезаписывали его
     // тоже самое касается аутентификации MTProto API
     tgInitOnStart: true,
-    onepayApiKey: 'WRWTMCZ-820MJ9A-J5Q9XAQ-Y94JXPJ',
-    onepayIpnSecret: 'SdBUXt+GXUB9pj+BR20xXvBJgPFPghWM',
+    onepayApiKey: 'Z8TRY68-80D4K18-QAEDEQ1-XAFP4KB',
+    onepayIpnSecret: 'E1+BG3rnZmnlQN5ffMSyjguEKqax7fh5',
   },
 };
 

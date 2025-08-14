@@ -29,9 +29,7 @@ export class CInordersController {
     @Body() dto: IWpEvent,
     @Req() request: Request,
   ): Promise<string> {
-    const signature = request.headers['x-api-key'] as string;
-    console.log(request.headers);
+    const signature = request.headers['x-nowpayments-sig'] as string;
     return this.inordersService.complete(dto, signature);
   }
 }
-// SdBUXt+GXUB9pj+BR20xXvBJgPFPghWM

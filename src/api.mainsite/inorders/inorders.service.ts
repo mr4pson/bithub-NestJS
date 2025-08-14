@@ -58,31 +58,31 @@ export class CInordersService {
     // dto: INowPaymentsPayment
     try {
       console.log(`nowpayments-ipn-received ${new Date()}`);
-      console.log(dto);
+      console.log('ORIGINAL DTO:', dto);
       // Получаем IPN secret из env
       const secret = cfg.onepayIpnSecret;
       if (!secret) throw 'NOWPayments IPN secret not found';
 
       // Рекурсивная сортировка объекта по ключам
       function sortObject(obj) {
-        return Object.keys(obj)
+        if (obj === null || typeof obj !== 'object' || Array.isArray(obj))
+          return obj;
+        const sorted = {};
+        Object.keys(obj)
           .sort()
-          .reduce((result, key) => {
-            result[key] =
-              obj[key] && typeof obj[key] === 'object'
-                ? sortObject(obj[key])
-                : obj[key];
-            return result;
-          }, {});
+          .forEach((key) => {
+            sorted[key] = sortObject(obj[key]);
+          });
+        return sorted;
       }
       const sortedDto = sortObject(dto);
       const payloadJson = JSON.stringify(sortedDto);
-      // HMAC-SHA512
       const computedSignature = crypto
         .createHmac('sha512', secret)
         .update(payloadJson)
         .digest('hex');
-      console.log(computedSignature, signature);
+      console.log('COMPUTED SIGNATURE:', computedSignature);
+      console.log('RECEIVED SIGNATURE:', signature);
       if (computedSignature !== signature) throw 'invalid signature';
 
       // Проверяем успешный статус платежа
@@ -156,7 +156,7 @@ export class CInordersService {
     const res = await this.networkService.post(url, payload, { headers });
     const paymentData = res.data as INowPaymentsPayment;
 
-    console.log(res);
+    console.log('payment created', res.data);
 
     inorder.outer_id = paymentData.id;
     await this.dataSource.getRepository(CInorder).save(inorder);
