@@ -18,6 +18,8 @@ export interface IConfig {
   // при старте можно отправить настройки вебхука в телеграм, но вебхук должен быть один, поэтому надо следить, чтобы разные копии не перезаписывали его
   // тоже самое касается аутентификации MTProto API
   readonly tgInitOnStart: boolean;
+  readonly onepayApiKey: string;
+  readonly onepayIpnSecret: string;
 }
 
 export interface IJwtConfig {
@@ -75,6 +77,8 @@ const configs: IKeyValue<IConfig> = {
     // при старте можно отправить настройки вебхука в телеграм, но вебхук должен быть один, поэтому надо следить, чтобы разные копии не перезаписывали его
     // тоже самое касается аутентификации MTProto API
     tgInitOnStart: false,
+    onepayApiKey: 'WRWTMCZ-820MJ9A-J5Q9XAQ-Y94JXPJ',
+    onepayIpnSecret: 'SdBUXt+GXUB9pj+BR20xXvBJgPFPghWM',
   },
   prod2: {
     mainsiteUrl: 'https://app.drop.guide',
@@ -107,6 +111,8 @@ const configs: IKeyValue<IConfig> = {
     // при старте можно отправить настройки вебхука в телеграм, но вебхук должен быть один, поэтому надо следить, чтобы разные копии не перезаписывали его
     // тоже самое касается аутентификации MTProto API
     tgInitOnStart: true,
+    onepayApiKey: 'WRWTMCZ-820MJ9A-J5Q9XAQ-Y94JXPJ',
+    onepayIpnSecret: 'SdBUXt+GXUB9pj+BR20xXvBJgPFPghWM',
   },
 };
 

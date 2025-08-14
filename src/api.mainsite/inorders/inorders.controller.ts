@@ -29,7 +29,7 @@ export class CInordersController {
     @Body() dto: IWpEvent,
     @Req() request: Request,
   ): Promise<string> {
-    const signature = request.headers['signature'] as string;
+    const signature = request.headers['x-api-key'] as string;
     return this.inordersService.complete(dto, signature);
   }
 }
