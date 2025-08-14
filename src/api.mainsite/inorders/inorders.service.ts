@@ -90,7 +90,7 @@ export class CInordersService {
         // ищем заказ по outer_id (order_id в dto)
         const inorder = await this.dataSource
           .getRepository(CInorder)
-          .findOne({ where: { outer_id: dto.order_id } });
+          .findOne({ where: { id: dto.order_id } });
         if (!inorder) throw 'inorder not found';
         inorder.received_amount = Number(dto.pay_amount) || 0;
         inorder.completed = true;
