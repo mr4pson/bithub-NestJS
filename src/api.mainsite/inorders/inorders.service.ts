@@ -1,19 +1,18 @@
 import { Injectable } from '@nestjs/common';
-import crypto from 'crypto';
-import { HmacSHA256 } from 'crypto-js';
 import { cfg } from 'src/app.config';
 import { CErrorsService } from 'src/common/services/errors.service';
 import { CNetworkService } from 'src/common/services/network.service';
 import { IResponse } from 'src/model/dto/response.interface';
 import { CInorder } from 'src/model/entities/inorder';
 import { CReforder } from 'src/model/entities/reforder';
-import { CSetting } from 'src/model/entities/setting';
 import { CUser } from 'src/model/entities/user';
 import { CSocketGateway } from 'src/socket/socket.gateway';
 import { DataSource } from 'typeorm';
 import { INowPaymentsPayment } from './dto';
 import { IInorderCreate } from './dto/inorder.create.interface';
-import { IWpOrder, IWpOrderData } from './dto/whitepay';
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const crypto = require('crypto');
 
 @Injectable()
 export class CInordersService {
