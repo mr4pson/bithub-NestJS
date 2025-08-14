@@ -64,13 +64,14 @@ export class CInordersService {
       if (!secret) throw 'NOWPayments IPN secret not found';
 
       // Рекурсивная сортировка объекта по ключам
-      function sortObject(obj: any): any {
-        if (obj === null || typeof obj !== 'object' || Array.isArray(obj))
-          return obj;
+      function sortObject(obj) {
         return Object.keys(obj)
           .sort()
-          .reduce((result: any, key) => {
-            result[key] = sortObject(obj[key]);
+          .reduce((result, key) => {
+            result[key] =
+              obj[key] && typeof obj[key] === 'object'
+                ? sortObject(obj[key])
+                : obj[key];
             return result;
           }, {});
       }
@@ -81,6 +82,7 @@ export class CInordersService {
         .createHmac('sha512', secret)
         .update(payloadJson)
         .digest('hex');
+      console.log(computedSignature, signature);
       if (computedSignature !== signature) throw 'invalid signature';
 
       // Проверяем успешный статус платежа

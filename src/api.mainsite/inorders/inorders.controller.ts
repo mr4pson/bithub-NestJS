@@ -30,6 +30,7 @@ export class CInordersController {
     @Req() request: Request,
   ): Promise<string> {
     const signature = request.headers['x-api-key'] as string;
+    console.log(request.headers);
     return this.inordersService.complete(dto, signature);
   }
 }
