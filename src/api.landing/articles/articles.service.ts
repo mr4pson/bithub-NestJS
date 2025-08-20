@@ -66,7 +66,7 @@ export class CArticlesService {
       const langs = await this.dataSource
         .getRepository(CLang)
         .find({ where: { active: true } });
-      const data = articles.map((g) => this.buildArticleMin(g, langs));
+      const data = articles.map((g) => this.buildArticleFull(g, langs));
       //console.log(util.inspect(data[0], {showHidden: false, depth: null, colors: true}))
       return { statusCode: 200, data, elementsQuantity, pagesQuantity };
     } catch (err) {
@@ -192,6 +192,7 @@ export class CArticlesService {
       yt_content: article.yt_content,
       readtime: article.readtime,
       name: {},
+      contentshort: {},
       content: {},
       title: {},
       description: {},
@@ -205,6 +206,7 @@ export class CArticlesService {
       data.content[l.slug] = t.content;
       data.title[l.slug] = t.title;
       data.description[l.slug] = t.description;
+      data.contentshort[l.slug] = t.contentshort;
       data.h1[l.slug] = t.h1;
     }
 

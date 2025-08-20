@@ -7,7 +7,7 @@ import { JwtService } from '@nestjs/jwt';
 import { CUserGuard } from 'src/common/services/guards/user.guard';
 import { IReadingUpdate } from './dto/reading.update.interface';
 
-@Controller('api/mainsite/articles')
+@Controller('api/landing/articles')
 export class CArticlesController {
   constructor(
     private articlesService: CArticlesService,
