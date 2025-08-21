@@ -159,6 +159,10 @@ export class CArticlesService {
       }
     }
 
+    if (dtoFilter.is_for_landing !== undefined) {
+      filter += ` AND articles.is_for_landing = ${dtoFilter.is_for_landing}`;
+    }
+
     return filter;
   }
 
@@ -169,6 +173,7 @@ export class CArticlesService {
       date: this.appService.mysqlDateToHumanDate(article.date),
       img: article.img,
       readtime: article.readtime,
+      is_for_landing: article.is_for_landing,
       name: {},
       contentshort: {},
       was_read: article['readings_count'] === 1,
@@ -191,6 +196,7 @@ export class CArticlesService {
       img: article.img,
       yt_content: article.yt_content,
       readtime: article.readtime,
+      is_for_landing: article.is_for_landing,
       name: {},
       contentshort: {},
       content: {},

@@ -7,6 +7,7 @@ export interface IArticle {
   readonly img: string;
   readonly yt_content?: string;
   readonly readtime: number;
+  readonly is_for_landing?: boolean;
   readonly name: IMultilangable;
   readonly content?: IMultilangable;
   readonly contentshort?: IMultilangable;
