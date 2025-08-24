@@ -10,6 +10,7 @@ import { CMailService } from 'src/common/services/mailable/mail.service';
 import { cfg } from 'src/app.config';
 import { INowPaymentsPayment } from '../inorders/dto';
 import { CNetworkService } from 'src/common/services/network.service';
+import { CSocketGateway } from 'src/socket/socket.gateway';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const crypto = require('crypto');
@@ -21,6 +22,7 @@ export class CShopordersService {
     private networkService: CNetworkService,
     private errorsService: CErrorsService,
     protected mailService: CMailService,
+    private socketGateway: CSocketGateway,
   ) {}
 
   public async create(
@@ -50,14 +52,34 @@ export class CShopordersService {
         });
       }
 
-      const inorder = await this.dataSource.getRepository(CShoporder).findOne({
-        where: { id: createdOrder.id },
-        relations: ['items', 'items.shopitem', 'items.shopitem.translations'],
-      });
+      const updatedShoporder = await this.dataSource
+        .getRepository(CShoporder)
+        .findOne({
+          where: { id: createdOrder.id },
+          relations: ['items', 'items.shopitem', 'items.shopitem.translations'],
+        });
 
-      const url = await this.nowPaymentsCreatePayment(inorder, dto.lang_slug);
+      const totalPrice = updatedShoporder.items.reduce(
+        (acc, item) => acc + item.shopitem.price * item.qty,
+        0,
+      );
 
-      this.notifyOnCreate(createdOrder);
+      if (user.money >= totalPrice) {
+        user.money -= totalPrice;
+
+        await this.dataSource.getRepository(CUser).save(user);
+        this.socketGateway.broadcast({ event: `user:reload:${user.id}` });
+
+        return { statusCode: 201 };
+      }
+
+      const url = await this.nowPaymentsCreatePayment(
+        updatedShoporder,
+        dto.lang_slug,
+        totalPrice,
+      );
+
+      this.notifyOnCreate(updatedShoporder);
 
       return { statusCode: 201, data: url };
     } catch (err) {
@@ -93,12 +115,9 @@ export class CShopordersService {
   private async nowPaymentsCreatePayment(
     shoporder: CShoporder,
     langSlug: string,
+    totalPrice: number,
   ) {
     const url = 'https://api.nowpayments.io/v1/invoice';
-    const totalPrice = shoporder.items.reduce(
-      (acc, item) => acc + item.shopitem.price * item.qty,
-      0,
-    );
     const payload = {
       price_amount: totalPrice,
       price_currency: 'usd',

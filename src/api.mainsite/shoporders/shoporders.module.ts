@@ -4,9 +4,10 @@ import { CShopordersController } from './shoporders.controller';
 import { CShopordersService } from './shoporders.service';
 import { JwtModule } from '@nestjs/jwt';
 import { cfg } from 'src/app.config';
+import { CSocketModule } from 'src/socket/socket.module';
 
 @Module({
-  imports: [CCommonModule, JwtModule.register(cfg.jwtUser)],
+  imports: [CCommonModule, CSocketModule, JwtModule.register(cfg.jwtUser)],
   providers: [CShopordersService],
   controllers: [CShopordersController],
 })
