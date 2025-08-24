@@ -66,7 +66,9 @@ export class CShopordersService {
 
       if (user.money >= totalPrice) {
         user.money -= totalPrice;
+        createdOrder.status = 'paid';
 
+        await this.dataSource.getRepository(CShoporder).save(createdOrder);
         await this.dataSource.getRepository(CUser).save(user);
         this.socketGateway.broadcast({ event: `user:reload:${user.id}` });
 
