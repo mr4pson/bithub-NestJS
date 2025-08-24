@@ -1,5 +1,6 @@
 export interface IShoporderCreate {
-    readonly shopitem_id: number;
-    readonly tg: string;
-    readonly comment: string;
+  readonly items: Array<{ shopitem_id: number; qty: number }>;
+  readonly tg: string;
+  readonly comment: string;
+  readonly lang_slug: string;
 }

@@ -1,37 +1,42 @@
-import { Column, CreateDateColumn, Entity, Index, JoinColumn, ManyToOne } from "typeorm";
-import { CEntity } from "./_entity";
-import { CShopitem } from "./shopitem";
+import { Column, CreateDateColumn, Entity, Index, OneToMany } from 'typeorm';
+import { CEntity } from './_entity';
+import { CShoporderItem } from './shoporder.item';
 
-@Entity({name: "a7_shoporders"})
+@Entity({ name: 'a7_shoporders' })
 export class CShoporder extends CEntity {
-    @Column({nullable: false})
-    public shopitem_id: number;
+  @Index()
+  @Column({ nullable: true, default: null })
+  public outer_id: string;
 
-    @Index()
-    @Column({nullable: false})
-    public email: string;
+  @Index()
+  @Column({ nullable: false })
+  public email: string;
 
-    @Index()
-    @Column({nullable: true, default: null})
-    public tg: string;
+  @Index()
+  @Column({ nullable: true, default: null })
+  public tg: string;
 
-    @Column({type: "text", nullable: true, default: null})
-    public comment: string;
+  @Column({ type: 'text', nullable: true, default: null })
+  public comment: string;
 
-    @Column({type: "enum", enum: ["created", "completed", "rejected"], nullable: false, default: "created"})
-    public status: TShoporderStatus;
+  @Column({
+    type: 'enum',
+    enum: ['created', 'paid', 'completed', 'rejected'],
+    nullable: false,
+    default: 'created',
+  })
+  public status: TShoporderStatus;
 
-    @Index()
-    @CreateDateColumn({nullable: false, type: "timestamp"})
-    public created_at: Date;
+  @Index()
+  @CreateDateColumn({ nullable: false, type: 'timestamp' })
+  public created_at: Date;
 
-    ////////////////
-    // relations
-    ////////////////
+  ////////////////
+  // relations
+  ////////////////
 
-    @ManyToOne(type => CShopitem, {onDelete: "RESTRICT", onUpdate: "CASCADE", cascade: false})
-    @JoinColumn({name: "shopitem_id"})
-    public shopitem: CShopitem;
+  @OneToMany(() => CShoporderItem, (item) => item.shoporder, { cascade: true })
+  public items: CShoporderItem[];
 }
 
-export type TShoporderStatus = "created" | "completed" | "rejected";
+export type TShoporderStatus = 'created' | 'paid' | 'completed' | 'rejected';
