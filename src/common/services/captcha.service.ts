@@ -1,35 +1,34 @@
-import { Injectable } from "@nestjs/common";
-import { CSetting } from "src/model/entities/setting";
-import { DataSource } from "typeorm";
-import { CNetworkService } from "src/common/services/network.service";
+import { Injectable } from '@nestjs/common';
+import { CNetworkService } from 'src/common/services/network.service';
 
-export interface ICaptchaResponse {
-    readonly success: boolean;
-    readonly challenge_ts: string;
-    readonly hostname: string;
-    readonly "error-codes": string[];
+export interface IRecaptchaResponse {
+  readonly success: boolean;
+  readonly action: string;
+  readonly score: number;
+  readonly challenge_ts: string;
+  readonly hostname: string;
+  readonly 'error-codes': string[];
 }
-
 @Injectable()
 export class CCaptchaService {
-    constructor(
-        private dataSource: DataSource,
-        private networkService: CNetworkService,
-    ) {} 
+  constructor(private networkService: CNetworkService) {}
 
-    public async verify(token: string): Promise<boolean> {
-        const key = (await this.dataSource.getRepository(CSetting).findOneBy({p: `hcaptcha-private`}))?.v;
-        const url = (await this.dataSource.getRepository(CSetting).findOneBy({p: `hcaptcha-back-url`}))?.v;
+  public async verify(token: string): Promise<boolean> {
+    const key = '6LdlZ7crAAAAAEDk9I1f1I-mQiKFhlxN3ysrHtLX';
+    const url = 'https://www.google.com/recaptcha/api/siteverify';
 
-        if (!key || !url) {
-            throw "captcha setting not found";
-        }
+    if (!key) throw 'captcha setting not found';
 
-        const fd = new FormData();
-        fd.append("secret", key);
-        fd.append("response", token);            
-        const res = await this.networkService.post(url, fd);
-        const data = res.data as ICaptchaResponse;
-        return data.success;        
-    }
+    const fd = new URLSearchParams();
+
+    fd.append('secret', key);
+    fd.append('response', token);
+
+    const res = await this.networkService.post(url, fd);
+    const data = res.data as IRecaptchaResponse;
+
+    // Проверяем успех, action и score
+    console.log(data);
+    return data.success && data.score > 0.5;
+  }
 }
