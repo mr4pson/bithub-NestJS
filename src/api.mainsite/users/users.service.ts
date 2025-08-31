@@ -172,18 +172,27 @@ export class CUsersService extends CImagableService {
     try {
       const login = dto.email;
       const code = this.appService.randomString(6, 'digits');
+
       await this.dataSource.getRepository(CVerification).delete({ login });
+
       const verification = this.dataSource
         .getRepository(CVerification)
         .create({ login, code });
+
       await this.dataSource.getRepository(CVerification).save(verification);
-      this.mailService.userEmailVerification(dto.email, dto.lang_id, code);
+      await this.mailService.userEmailVerification(
+        dto.email,
+        dto.lang_id,
+        code,
+      );
+
       return { statusCode: 200 };
     } catch (err) {
       const error = await this.errorsService.log(
         'api.mainsite/CUsersService.createVerification',
         err,
       );
+
       return { statusCode: 500, error };
     }
   }
@@ -202,6 +211,8 @@ export class CUsersService extends CImagableService {
           created_at: MoreThanOrEqual(expiration),
         },
       });
+
+    console.log(verification, code);
 
     if (!verification) {
       return { statusCode: 401, error: 'code is incorrect' };
