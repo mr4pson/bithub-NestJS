@@ -200,15 +200,15 @@ export class CUsersService extends CImagableService {
   public async verify({ code, userId }: { code: string; userId: number }) {
     const user = await this.getUser(userId, 'id');
     // check code
-    const now = new Date();
-    const expiration = new Date(now.getTime() - 5 * 60 * 1000);
+    // const now = new Date();
+    // const expiration = new Date(now.getTime() - 30 * 60 * 1000);
     const verification = await this.dataSource
       .getRepository(CVerification)
       .findOne({
         where: {
           login: user.email,
-          code,
-          created_at: MoreThanOrEqual(expiration),
+          code: code.trim(),
+          // created_at: MoreThanOrEqual(expiration),
         },
       });
 
@@ -589,7 +589,7 @@ export class CUsersService extends CImagableService {
     return this.dataSource.getRepository(CUser).create({
       lang_id: dto.lang_id,
       name: dto.name,
-      email: dto.email,
+      email: dto.email.trim(),
       password: this.authService.buildHash(dto.password),
       wallet: dto.wallet,
       tz,
