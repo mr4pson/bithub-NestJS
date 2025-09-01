@@ -56,14 +56,16 @@ export class CTasksController {
     return this.tasksService.unviewedChunk(dto, visitor_id);
   }
 
-  @UseGuards(CUserGuard)
+  // @UseGuards(CUserGuard)
   @Post('unviewed-quantity/:favorites')
   public unviewedQuantity(
     @Param('favorites') favorites: string,
     @Req() request: Request,
   ): Promise<IResponse<number>> {
     const token = request.headers['token'] as string;
-    const visitor_id = this.jwtService.decode(token)['id'] as number;
+    const visitor_id = ((token && this.jwtService.decode(token)) ?? {})[
+      'id'
+    ] as number;
     return this.tasksService.unviewedQuantity(favorites === 'true', visitor_id);
   }
 
