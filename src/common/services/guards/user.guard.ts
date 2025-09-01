@@ -27,6 +27,7 @@ export class CUserGuard implements CanActivate {
 
       return true;
     } catch (err) {
+      console.log(err);
       throw new HttpException({ statusCode: 403, error: 'unauthorized' }, 200);
     }
   }
