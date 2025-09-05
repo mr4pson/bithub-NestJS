@@ -22,7 +22,6 @@ import {
   ICompletionTask,
   ICompletionUser,
 } from './dto/completion.interface';
-import * as util from 'util';
 
 @Injectable()
 export class CGuidesService {
@@ -653,6 +652,7 @@ export class CGuidesService {
       guide_id: task.guide_id,
       type: task.type,
       contenttype: task.contenttype,
+      availableWithSubscription: task.availableWithSubscription,
       name: {},
       completed: task['completions_count'] === 1,
       actual_until: task.actual_until,

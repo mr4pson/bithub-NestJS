@@ -79,6 +79,9 @@ export class CGuide extends CEntity implements IImagable {
   @Column({ nullable: true, default: true })
   public steps_limit?: number;
 
+  @Column({ nullable: true, default: undefined })
+  public available_for?: string;
+
   @Index()
   @CreateDateColumn({ type: 'timestamp' })
   public created_at: Date;

@@ -10,6 +10,7 @@ export interface IUser {
   readonly img: string;
   readonly money: number;
   readonly points: number;
+  readonly subType: 'dg-pro' | 'dg-team';
   readonly paid_at: Date;
   readonly paid_until: Date;
   readonly freetasks: number;

@@ -34,6 +34,9 @@ export class CShopitem extends CEntity {
   @Column({ nullable: false, default: false, select: false })
   public archived: boolean;
 
+  @Column({ nullable: true, default: undefined })
+  public available_for?: string;
+
   ////////////////
   // relations
   ////////////////

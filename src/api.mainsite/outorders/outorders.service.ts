@@ -11,6 +11,7 @@ import { CPromocode } from 'src/model/entities/promocode';
 import { CMailService } from 'src/common/services/mailable/mail.service';
 import { CTgApiService } from 'src/common/services/tg.api.service';
 import { CSetting } from 'src/model/entities/setting';
+import { SUBSCRIPTION_LIST } from './constants';
 
 @Injectable()
 export class COutordersService {
@@ -45,16 +46,30 @@ export class COutordersService {
           return { statusCode: 409, error: 'code is invalid' };
       }
 
-      const preamount = tariff.price * dto.q; // для подписок всегда q=1
+      let preamount = 0;
+      const subscription = SUBSCRIPTION_LIST.find(
+        (subscription) => subscription.type === dto.subscriptionType,
+      );
+
+      if (dto.subscriptionType) {
+        const price = subscription.price?.find(
+          (priceItem) => priceItem.period === tariff.period,
+        );
+        preamount = price.value * dto.q; // для подписок всегда q=1
+      } else {
+        preamount = tariff.price * dto.q; // для подписок всегда q=1
+      }
+
       const discount = promocode ? (preamount / 100) * promocode.discount : 0;
       const amount = parseFloat((preamount - discount).toFixed(2));
       if (amount > user.money)
         return { statusCode: 410, error: 'insufficient money' };
-
       // build outorder
       const tariffName = tariff.translations.find((t) => t.lang_id === 1)?.name;
       const tariffNote = tariff.translations.find((t) => t.lang_id === 1)?.note;
-      const purpose = tariffName + (tariffNote ? ' ' + tariffNote : '');
+      const subscriptionName = subscription ? `${subscription.name} ` : '';
+      const purpose =
+        subscriptionName + tariffName + (tariffNote ? ' ' + tariffNote : '');
       const outorder = this.dataSource.getRepository(COutorder).create({
         user_email: user.email,
         amount,

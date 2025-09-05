@@ -43,6 +43,9 @@ export class CTask extends CEntity {
   })
   public contenttype: TTaskContentType;
 
+  @Column({ nullable: true, default: false })
+  public availableWithSubscription: boolean;
+
   @Column({ type: 'text', nullable: true, default: null, select: false })
   public yt_content: string;
 

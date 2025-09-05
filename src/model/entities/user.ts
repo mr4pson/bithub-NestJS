@@ -60,6 +60,9 @@ export class CUser extends CEntity implements IChildable, IImagable {
   @Column({ nullable: false, default: 0 })
   public points: number; // баллы
 
+  @Column({ type: String, nullable: true, default: null })
+  public subType?: 'dg-pro' | 'dg-team'; // тип подписки
+
   @Index()
   @Column({ type: 'timestamp', nullable: true, default: null })
   public paid_at: Date; // дата активации подписки
