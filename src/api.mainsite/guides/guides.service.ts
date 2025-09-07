@@ -273,9 +273,9 @@ export class CGuidesService {
   public async one(id: number, user_id: number): Promise<IResponse<IGuide>> {
     try {
       // to sort joined array we need to use QueryBuilder instead of simple repository API!
-      let filter = `guides.id='${id}' AND guides.active='1'`;
-      if (!(await this.usersService.canSeePaidContent(user_id)))
-        filter += ` AND cat.paid = '0'`;
+      const filter = `guides.id='${id}' AND guides.active='1'`;
+      // if (!(await this.usersService.canSeePaidContent(user_id)))
+      //   filter += ` AND cat.paid = '0'`;
       const guide = await this.dataSource
         .getRepository(CGuide)
         .createQueryBuilder('guides')
@@ -411,9 +411,9 @@ export class CGuidesService {
   ): Promise<string> {
     let filter = "guides.active = '1'";
 
-    if (!(await this.usersService.canSeePaidContent(user_id))) {
-      filter += ` AND cat.paid = '0'`;
-    }
+    // if (!(await this.usersService.canSeePaidContent(user_id))) {
+    //   filter += ` AND cat.paid = '0'`;
+    // }
 
     if (dtoFilter.search) {
       filter += ` AND LOWER(translations.name) LIKE LOWER('%${dtoFilter.search}%')`;
@@ -450,9 +450,9 @@ export class CGuidesService {
   }
 
   private async buildFavoritesChunkFilter(user_id: number): Promise<string> {
-    let filter = `guides.active='1' AND favoritions.user_id='${user_id}'`;
-    if (!(await this.usersService.canSeePaidContent(user_id)))
-      filter += ` AND cat.paid = '0'`;
+    const filter = `guides.active='1' AND favoritions.user_id='${user_id}'`;
+    // if (!(await this.usersService.canSeePaidContent(user_id)))
+    //   filter += ` AND cat.paid = '0'`;
     return filter;
   }
 

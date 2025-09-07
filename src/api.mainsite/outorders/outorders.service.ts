@@ -56,6 +56,7 @@ export class COutordersService {
           (priceItem) => priceItem.period === tariff.period,
         );
         preamount = price.value * dto.q; // для подписок всегда q=1
+        user.subType = dto.subscriptionType as 'dg-pro' | 'dg-team';
       } else {
         preamount = tariff.price * dto.q; // для подписок всегда q=1
       }

@@ -212,11 +212,11 @@ export class CTasksService {
             .findOneBy({ p: 'site-freetasks' })
         )?.v;
         if (!freeLimit) return { statusCode: 404, error: 'setting not found' };
-        if (user.freetasks + 1 > parseInt(freeLimit))
-          return {
-            statusCode: errorCode,
-            error: 'no subscription and free task views limit exceeded',
-          };
+        // if (user.freetasks + 1 > parseInt(freeLimit))
+        //   return {
+        //     statusCode: errorCode,
+        //     error: 'no subscription and free task views limit exceeded',
+        //   };
         user.freetasks++;
         user.freetask_viewed_at = new Date();
         await this.dataSource.getRepository(CUser).save(user);
