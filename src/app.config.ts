@@ -48,7 +48,7 @@ const configs: IKeyValue<IConfig> = {
       'https://app.bithab.vio.net.ua',
       'https://bithab.vio.net.ua',
       'http://localhost:4200',
-      'http://localhost:55490',
+      'http://localhost:61490',
       'http://localhost:62942',
     ],
     //dbHost: "localhost",

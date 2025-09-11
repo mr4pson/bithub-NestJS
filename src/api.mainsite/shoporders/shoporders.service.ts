@@ -59,10 +59,13 @@ export class CShopordersService {
           relations: ['items', 'items.shopitem', 'items.shopitem.translations'],
         });
 
-      const totalPrice = updatedShoporder.items.reduce(
-        (acc, item) => acc + item.shopitem.price * item.qty,
-        0,
-      );
+      const totalPrice = updatedShoporder.items.reduce((acc, item) => {
+        const { discount, price } = item.shopitem;
+        const calculatedPrice = discount
+          ? price - (price * discount) / 100
+          : price;
+        return acc + calculatedPrice * item.qty;
+      }, 0);
 
       if (user.money >= totalPrice) {
         user.money -= totalPrice;
