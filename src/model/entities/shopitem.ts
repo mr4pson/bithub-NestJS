@@ -31,6 +31,9 @@ export class CShopitem extends CEntity {
   @Column({ nullable: false, default: 0 })
   public min_items_num: number;
 
+  @Column({ nullable: true, default: 1 })
+  public priceStep: number;
+
   @Column({ nullable: false, default: true })
   public active: boolean;
 

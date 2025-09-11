@@ -9,6 +9,7 @@ export interface IShopitem {
   readonly min_items_num?: number;
   readonly available_for?: string;
   readonly name: IMultilangable;
+  readonly priceStep?: number;
   readonly content?: IMultilangable;
   readonly contentshort?: IMultilangable;
 }
