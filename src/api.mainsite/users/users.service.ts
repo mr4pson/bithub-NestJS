@@ -612,7 +612,7 @@ export class CUsersService extends CImagableService {
       img: user.img,
       money: user.money,
       points: user.points,
-      subType: user.subType,
+      subType: user.parent_id ? user.parent.subType : user.subType,
       paid_at: user.parent_id ? user.parent.paid_at : user.paid_at,
       paid_until: user.parent_id ? user.parent.paid_until : user.paid_until,
       freetasks: user.parent_id ? user.parent?.freetasks : user.freetasks,
