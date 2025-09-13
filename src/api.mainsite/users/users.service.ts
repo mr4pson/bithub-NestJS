@@ -572,6 +572,7 @@ export class CUsersService extends CImagableService {
       name: dto.name,
       wallet: dto.wallet,
       img: dto.img,
+      tg_username: dto.tg_username,
       tg_tasks: dto.tg_tasks,
       tg_guides: dto.tg_guides,
       tg_articles: dto.tg_articles,
@@ -622,6 +623,7 @@ export class CUsersService extends CImagableService {
       overdue:
         user.paid_until && user.paid_until.getTime() < new Date().getTime(),
       referral_percent: user.referral_percent,
+      tg_username: user.tg_username,
       tg_tasks: user.tg_tasks,
       tg_guides: user.tg_guides,
       tg_articles: user.tg_articles,

@@ -18,6 +18,7 @@ export interface IUser {
   readonly children_q: number; // кол-во субаккаунтов
   readonly overdue: boolean; // оплата просрочена
   readonly referral_percent: number;
+  readonly tg_username?: string;
   readonly tg_tasks: boolean;
   readonly tg_guides: boolean;
   readonly tg_articles: boolean;

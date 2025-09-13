@@ -36,6 +36,7 @@ export class CShopordersService {
       const shoporder = this.dataSource.getRepository(CShoporder).create({
         email: user.email,
         tg: dto.tg,
+        wallet: dto.wallet,
         comment: dto.comment,
         status: 'created',
       });

@@ -490,6 +490,7 @@ export class CGuidesService {
       favorited: false,
       progress: 0,
       has_unviewed: false,
+      type: guide.type,
     };
 
     if (user) {

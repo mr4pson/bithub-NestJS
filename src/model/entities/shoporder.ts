@@ -14,6 +14,10 @@ export class CShoporder extends CEntity {
 
   @Index()
   @Column({ nullable: true, default: null })
+  public wallet: string;
+
+  @Index()
+  @Column({ nullable: true, default: null })
   public tg: string;
 
   @Column({ type: 'text', nullable: true, default: null })
