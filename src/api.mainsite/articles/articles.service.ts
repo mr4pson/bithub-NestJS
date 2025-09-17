@@ -172,10 +172,12 @@ export class CArticlesService {
       slug: article.slug,
       date: this.appService.mysqlDateToHumanDate(article.date),
       img: article.img,
+      yt_content: article.yt_content,
       readtime: article.readtime,
       is_for_landing: article.is_for_landing,
       name: {},
       contentshort: {},
+      canonical: {},
       was_read: article['readings_count'] === 1,
     };
 
@@ -183,6 +185,7 @@ export class CArticlesService {
       const t = article.translations.find((t) => t.lang_id === l.id);
       data.name[l.slug] = t.name;
       data.contentshort[l.slug] = t.contentshort;
+      data.canonical[l.slug] = t.canonical;
     }
 
     return data;
@@ -201,6 +204,7 @@ export class CArticlesService {
       content: {},
       title: {},
       description: {},
+      canonical: {},
       h1: {},
       was_read: article['readings_count'] === 1,
     };
@@ -212,6 +216,7 @@ export class CArticlesService {
       data.title[l.slug] = t.title;
       data.description[l.slug] = t.description;
       data.h1[l.slug] = t.h1;
+      data.canonical[l.slug] = t.canonical;
     }
 
     return data;

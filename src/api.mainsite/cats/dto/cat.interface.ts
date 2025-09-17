@@ -1,6 +1,7 @@
-import { IMultilangable } from "src/model/multilangable.interface";
+import { IMultilangable } from 'src/model/multilangable.interface';
 
 export interface ICat {
-    id: number;
-    name: IMultilangable;
+  id: number;
+  name: IMultilangable;
+  slug: string;
 }

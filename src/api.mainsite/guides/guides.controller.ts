@@ -72,6 +72,18 @@ export class CGuidesController {
     return this.guidesService.favoritesChunk(dto, visitor_id);
   }
 
+  @Post('one-by-slug/:slug')
+  public oneBySlug(
+    @Param('slug') slug: string,
+    @Req() request: Request,
+  ): Promise<IResponse<IGuide>> {
+    const token = request.headers['token'] as string;
+    const visitor_id = token
+      ? (this.jwtService.decode(token)['id'] as number)
+      : null;
+    return this.guidesService.oneBySlug(slug, visitor_id);
+  }
+
   // @UseGuards(CUserGuard)
   @Post('one/:id')
   public one(

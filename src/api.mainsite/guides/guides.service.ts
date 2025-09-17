@@ -327,6 +327,66 @@ export class CGuidesService {
     }
   }
 
+  public async oneBySlug(
+    slug: string,
+    user_id: number,
+  ): Promise<IResponse<IGuide>> {
+    try {
+      // to sort joined array we need to use QueryBuilder instead of simple repository API!
+      const filter = `guides.slug='${slug}' AND guides.active='1'`;
+      // if (!(await this.usersService.canSeePaidContent(user_id)))
+      //   filter += ` AND cat.paid = '0'`;
+      const guide = await this.dataSource
+        .getRepository(CGuide)
+        .createQueryBuilder('guides')
+        .addSelect('guides.price')
+        .addSelect('guides.time')
+        .addSelect('guides.type')
+        .addSelect('guides.steps_limit')
+        .leftJoinAndSelect('guides.cat', 'cat')
+        .leftJoinAndSelect('guides.translations', 'translations')
+        .addSelect('translations.content')
+        .leftJoinAndSelect('guides.links', 'links')
+        .leftJoinAndSelect('links.type', 'link_type')
+        .leftJoinAndSelect('guides.tasks', 'tasks')
+        .leftJoinAndSelect('tasks.translations', 'task_translations')
+        .loadRelationCountAndMap(
+          'tasks.completions_count',
+          'tasks.completions',
+          'completions',
+          (qb) => qb.where(`completions.user_id='${user_id}'`),
+        ) // отметки о выполнении тасков пользователем
+        .loadRelationCountAndMap(
+          'guides.favoritions_count',
+          'guides.favoritions',
+          'favoritions',
+          (qb) => qb.where(`favoritions.user_id='${user_id}'`),
+        ) // отметки о занесении в избранное
+        .where(filter)
+        .orderBy({
+          'links.pos': 'ASC',
+          'tasks.pos': 'ASC',
+        })
+        .getOne();
+
+      if (!guide) {
+        return { statusCode: 404, error: 'guide not found' };
+      }
+
+      const langs = await this.dataSource
+        .getRepository(CLang)
+        .find({ where: { active: true } });
+      const data = this.buildGuideFull(guide, langs);
+      return { statusCode: 200, data };
+    } catch (err) {
+      const error = await this.errorsService.log(
+        'api.mainsite/CGuidesService.one',
+        err,
+      );
+      return { statusCode: 500, error };
+    }
+  }
+
   public async updateFavorition(
     dto: IFavoritionUpdate,
     user_id: number,
@@ -477,6 +537,7 @@ export class CGuidesService {
   private buildGuideMin(guide: CGuide, langs: CLang[], user: CUser): IGuide {
     const data: IGuide = {
       id: guide.id,
+      slug: guide.slug,
       img: guide.img,
       invest: guide.invest,
       bh_score: guide.bh_score,
@@ -525,6 +586,7 @@ export class CGuidesService {
   private buildGuideFavorite(guide: CGuide, langs: CLang[]): IGuide {
     const data: IGuide = {
       id: guide.id,
+      slug: guide.slug,
       img: guide.img,
       name: {},
       earnings: guide.earnings,
@@ -544,6 +606,7 @@ export class CGuidesService {
     const now = new Date();
     const data: IGuide = {
       id: guide.id,
+      slug: guide.slug,
       img: guide.img,
       invest: guide.invest,
       bh_score: guide.bh_score,
@@ -584,6 +647,7 @@ export class CGuidesService {
   private buildGuideStat(guide: CGuide, langs: CLang[]): IGuide {
     const data: IGuide = {
       id: guide.id,
+      slug: guide.slug,
       img: guide.img,
       name: {},
       note: guide.notes[0]?.content || '',

@@ -17,6 +17,9 @@ export class CGuideTranslation extends CEntityTranslation {
   @Column({ type: 'text', nullable: true, default: null, select: false }) // select: false - for optimization purposes (decrease memory usage in stats queries)
   public contentshort: string;
 
+  @Column({ type: 'text', nullable: true, default: null })
+  public canonical: string;
+
   /*
     @Index()
     @Column({nullable: true, default: null})

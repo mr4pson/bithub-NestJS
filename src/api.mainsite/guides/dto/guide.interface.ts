@@ -12,6 +12,7 @@ export interface IGuide {
   img?: string;
   invest?: number;
   bh_score?: number;
+  slug?: string;
   name: IMultilangable;
   content?: IMultilangable;
   contentshort?: IMultilangable;

@@ -43,6 +43,7 @@ export class CCatsService {
   private buildCat(cat: CCat, langs: CLang[]): ICat {
     const data: ICat = {
       id: cat.id,
+      slug: cat.slug,
       name: {},
     };
 

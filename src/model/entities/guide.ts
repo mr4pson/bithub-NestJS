@@ -28,6 +28,9 @@ export class CGuide extends CEntity implements IImagable {
   @Column({ nullable: true, default: null })
   public cat_id: number;
 
+  @Column({ nullable: false })
+  public slug: string;
+
   @Column({ nullable: true, default: null })
   public img: string;
 

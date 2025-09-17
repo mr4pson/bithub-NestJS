@@ -176,6 +176,7 @@ export class CArticlesService {
       is_for_landing: article.is_for_landing,
       name: {},
       contentshort: {},
+      canonical: {},
       was_read: article['readings_count'] === 1,
     };
 
@@ -183,6 +184,7 @@ export class CArticlesService {
       const t = article.translations.find((t) => t.lang_id === l.id);
       data.name[l.slug] = t.name;
       data.contentshort[l.slug] = t.contentshort;
+      data.canonical[l.slug] = t.canonical;
     }
 
     return data;
@@ -203,6 +205,7 @@ export class CArticlesService {
       title: {},
       description: {},
       h1: {},
+      canonical: {},
       was_read: article['readings_count'] === 1,
     };
 
@@ -214,6 +217,7 @@ export class CArticlesService {
       data.description[l.slug] = t.description;
       data.contentshort[l.slug] = t.contentshort;
       data.h1[l.slug] = t.h1;
+      data.canonical[l.slug] = t.canonical;
     }
 
     return data;

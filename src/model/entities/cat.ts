@@ -10,6 +10,9 @@ export class CCat extends CEntity {
   @Column({ nullable: false, default: 0 })
   public pos: number;
 
+  @Column({ nullable: true, default: null })
+  public slug: string;
+
   // relations
   @OneToMany((type) => CCatTranslation, (translation) => translation.cat, {
     cascade: true,

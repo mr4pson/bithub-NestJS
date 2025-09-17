@@ -13,6 +13,7 @@ export interface IArticle {
   readonly contentshort?: IMultilangable;
   readonly title?: IMultilangable;
   readonly description?: IMultilangable;
+  readonly canonical?: IMultilangable;
   readonly h1?: IMultilangable;
   readonly was_read?: boolean;
 }
