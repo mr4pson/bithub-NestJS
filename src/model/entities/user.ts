@@ -85,6 +85,9 @@ export class CUser extends CEntity implements IChildable, IImagable {
   @Column({ nullable: false, default: 20 })
   public referral_percent: number;
 
+  @Column({ nullable: false, default: 10 })
+  public referral_buy_percent: number;
+
   @Column({ nullable: true, default: null })
   public tg_username: string;
 

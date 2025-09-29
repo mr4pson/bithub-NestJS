@@ -49,11 +49,11 @@ const configs: IKeyValue<IConfig> = {
       'https://bithab.vio.net.ua',
       'http://localhost:4200',
       'http://localhost:56720',
-      'http://localhost:64591',
+      'http://localhost:57188',
     ],
     //dbHost: "localhost",
     // dbHost: '185.151.245.92',
-    dbHost: '83.166.245.182',
+    dbHost: '89.104.67.169',
     dbPort: 3306,
     //dbName: "bithab",
     dbName: 'mario',
@@ -61,7 +61,7 @@ const configs: IKeyValue<IConfig> = {
     dbLogin: 'test',
     //dbPassword: "jid99deq", //
     // dbPassword: 'Vaiory36fix',
-    dbPassword: 'Qwerty123$',
+    dbPassword: 'qwerty123',
     appPort: 3030,
     wsPort: 3031,
     jwtAdmin: {

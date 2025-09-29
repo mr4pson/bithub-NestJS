@@ -117,6 +117,7 @@ export class CInordersService {
           );
           referrer.money += otkat;
           await this.dataSource.getRepository(CUser).save(referrer);
+
           const reforder = this.dataSource.getRepository(CReforder).create({
             referrer_email: referrer.email,
             referee_email: user.email,

@@ -11,6 +11,7 @@ import { cfg } from 'src/app.config';
 import { INowPaymentsPayment } from '../inorders/dto';
 import { CNetworkService } from 'src/common/services/network.service';
 import { CSocketGateway } from 'src/socket/socket.gateway';
+import { CReforder } from 'src/model/entities/reforder';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const crypto = require('crypto');
@@ -75,6 +76,26 @@ export class CShopordersService {
         await this.dataSource.getRepository(CShoporder).save(createdOrder);
         await this.dataSource.getRepository(CUser).save(user);
         this.socketGateway.broadcast({ event: `user:reload:${user.id}` });
+
+        // переводим откат рефереру, если есть
+        const referrer = user.referrer;
+
+        if (referrer && referrer.active && referrer.referral_percent) {
+          const otkat = parseFloat(
+            ((totalPrice / 100) * referrer.referral_percent).toFixed(),
+          );
+          referrer.money += otkat;
+          await this.dataSource.getRepository(CUser).save(referrer);
+
+          const reforder = this.dataSource.getRepository(CReforder).create({
+            referrer_email: referrer.email,
+            referee_email: user.email,
+            amount: otkat,
+          });
+
+          await this.dataSource.getRepository(CReforder).save(reforder);
+          this.socketGateway.broadcast({ event: `user:reload:${referrer.id}` });
+        }
 
         return { statusCode: 201 };
       }
@@ -184,8 +205,37 @@ export class CShopordersService {
           .findOne({ where: { id: dto.order_id } });
         if (!shoporder) throw 'shoporder not found';
         shoporder.status = 'paid';
+        shoporder.email;
         await this.dataSource.getRepository(CShoporder).save(shoporder);
+
+        shoporder.status = 'paid';
+
+        const user = await this.dataSource.getRepository(CUser).findOne({
+          where: { email: shoporder.email },
+          relations: ['referrer'],
+        });
+
+        // переводим откат рефереру, если есть
+        const referrer = user.referrer;
+
+        if (referrer && referrer.active && referrer.referral_percent) {
+          const otkat = parseFloat(
+            ((dto.pay_amount / 100) * referrer.referral_percent).toFixed(),
+          );
+          referrer.money += otkat;
+          await this.dataSource.getRepository(CUser).save(referrer);
+
+          const reforder = this.dataSource.getRepository(CReforder).create({
+            referrer_email: referrer.email,
+            referee_email: user.email,
+            amount: otkat,
+          });
+
+          await this.dataSource.getRepository(CReforder).save(reforder);
+          this.socketGateway.broadcast({ event: `user:reload:${referrer.id}` });
+        }
       }
+
       console.log(`nowpayments-ipn-ok ${new Date()}`);
       return 'ok';
     } catch (err) {

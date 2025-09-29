@@ -25,6 +25,8 @@ import { CAuthService } from 'src/common/services/auth.service';
 import { IUserEnterByToken } from './dto/user.enterbytoken.interface';
 import { CSetting } from 'src/model/entities/setting';
 import { CTgApiService } from 'src/common/services/tg.api.service';
+import { IRemoveSubacc } from './dto/user.remove-subacc.interface';
+import { CReforder } from 'src/model/entities/reforder';
 
 @Injectable()
 export class CUsersService extends CImagableService {
@@ -122,13 +124,29 @@ export class CUsersService extends CImagableService {
     }
   }
 
-  public async one(id: number, visitor_id: number): Promise<IResponse<IUser>> {
+  public async one(
+    id: number,
+    visitor_id: number,
+    showRefEarnings = false,
+  ): Promise<IResponse<IUser>> {
     try {
       const user = await this.getUser(id, 'id');
+
       if (!user) return { statusCode: 404, error: 'user not found' };
+
       if (!(user.id === visitor_id || user.parent_id === visitor_id))
         return { statusCode: 401, error: 'no permission' }; // можно загружать только себя и потомков
-      return { statusCode: 200, data: this.buildUser(user) };
+
+      let refEarnings: number | undefined;
+
+      if (showRefEarnings) {
+        const refOrders = await this.dataSource
+          .getRepository(CReforder)
+          .find({ where: { referrer_email: user.email } });
+        refEarnings = refOrders.reduce((sum, ro) => sum + ro.amount, 0);
+      }
+
+      return { statusCode: 200, data: this.buildUser(user, refEarnings) };
     } catch (err) {
       const error = await this.errorsService.log(
         'api.mainsite/CUsersService.me',
@@ -340,6 +358,31 @@ export class CUsersService extends CImagableService {
     } catch (err) {
       const error = await this.errorsService.log(
         'api.mainsite/CUsersService.update',
+        err,
+      );
+      return { statusCode: 500, error };
+    }
+  }
+
+  public async removeSubacc(subacc_id: number, user_id: number) {
+    try {
+      const subacc = await this.dataSource
+        .getRepository(CUser)
+        .findOneBy({ parent_id: user_id, id: subacc_id });
+
+      if (!subacc) {
+        return {
+          statusCode: 400,
+          error: `This user doesn't belong to this accounnt`,
+        };
+      }
+
+      await this.dataSource.getRepository(CUser).delete({ id: subacc_id });
+
+      return { statusCode: 200 };
+    } catch (err) {
+      const error = await this.errorsService.log(
+        'api.mainsite/CUsersService.removeSubacc',
         err,
       );
       return { statusCode: 500, error };
@@ -600,7 +643,7 @@ export class CUsersService extends CImagableService {
     });
   }
 
-  private buildUser(user: CUser): IUser {
+  private buildUser(user: CUser, refEarnings?: number): IUser {
     return {
       id: user.id,
       uuid: user.uuid,
@@ -623,6 +666,8 @@ export class CUsersService extends CImagableService {
       overdue:
         user.paid_until && user.paid_until.getTime() < new Date().getTime(),
       referral_percent: user.referral_percent,
+      referral_buy_percent: user.referral_buy_percent,
+      refEarnings,
       tg_username: user.tg_username,
       tg_tasks: user.tg_tasks,
       tg_guides: user.tg_guides,

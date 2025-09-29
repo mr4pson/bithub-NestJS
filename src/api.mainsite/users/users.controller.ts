@@ -42,7 +42,7 @@ export class CUsersController {
     const visitor_id = this.jwtService.decode(
       request.headers['token'] as string,
     )['id'] as number;
-    return this.usersService.one(visitor_id, visitor_id);
+    return this.usersService.one(visitor_id, visitor_id, true);
   }
 
   @UseGuards(CUserGuard)
@@ -127,6 +127,17 @@ export class CUsersController {
     const token = request.headers['token'] as string;
     const visitor_id = this.jwtService.decode(token)['id'] as number;
     return this.usersService.refereesChunk(dto, visitor_id);
+  }
+
+  @UseGuards(CUserGuard)
+  @Post('remove-subacc/:id')
+  public removeSubacc(
+    @Param('id') id: number,
+    @Req() request: Request,
+  ): Promise<IResponse<IUser[]>> {
+    const token = request.headers['token'] as string;
+    const visitor_id = this.jwtService.decode(token)['id'] as number;
+    return this.usersService.removeSubacc(id, visitor_id);
   }
 
   @UseGuards(CUserGuard)
