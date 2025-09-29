@@ -80,9 +80,9 @@ export class CShopordersService {
         // переводим откат рефереру, если есть
         const referrer = user.referrer;
 
-        if (referrer && referrer.active && referrer.referral_percent) {
+        if (referrer && referrer.active && referrer.referral_buy_percent) {
           const otkat = parseFloat(
-            ((totalPrice / 100) * referrer.referral_percent).toFixed(),
+            ((totalPrice / 100) * referrer.referral_buy_percent).toFixed(),
           );
           referrer.money += otkat;
           await this.dataSource.getRepository(CUser).save(referrer);
@@ -218,9 +218,9 @@ export class CShopordersService {
         // переводим откат рефереру, если есть
         const referrer = user.referrer;
 
-        if (referrer && referrer.active && referrer.referral_percent) {
+        if (referrer && referrer.active && referrer.referral_buy_percent) {
           const otkat = parseFloat(
-            ((dto.pay_amount / 100) * referrer.referral_percent).toFixed(),
+            ((dto.pay_amount / 100) * referrer.referral_buy_percent).toFixed(),
           );
           referrer.money += otkat;
           await this.dataSource.getRepository(CUser).save(referrer);
