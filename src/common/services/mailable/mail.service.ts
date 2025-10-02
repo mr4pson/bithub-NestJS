@@ -11,6 +11,7 @@ import { CUser } from 'src/model/entities/user';
 import { CPromocode } from 'src/model/entities/promocode';
 import { CComment } from 'src/model/entities/comment';
 import { CShoporder } from 'src/model/entities/shoporder';
+import { CWithdraworder } from 'src/model/entities/withdraworder';
 
 @Injectable()
 export class CMailService extends CMailableService {
@@ -75,6 +76,21 @@ export class CMailService extends CMailableService {
       await this.sendMessage(email, subject, content);
     } catch (err) {
       await this.errorsService.log('CMailService.adminShoporder', err);
+    }
+  }
+
+  public async adminWithdraworder(
+    email: string,
+    withdraworder: CWithdraworder,
+  ): Promise<void> {
+    try {
+      const mtd = await this.getMailtemplateData('admin-withdraworder', 1);
+      const adminUrl = cfg.adminUrl; // will use in eval
+      const subject = mtd.subject;
+      const content = eval('`' + mtd.content + '`');
+      await this.sendMessage(email, subject, content);
+    } catch (err) {
+      await this.errorsService.log('CMailService.adminWithdraworder', err);
     }
   }
 

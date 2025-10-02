@@ -67,6 +67,7 @@ import { CWord } from './model/entities/word';
 import { CWordTranslation } from './model/entities/word.translation';
 import { CWordbook } from './model/entities/wordbook';
 import { CSocketModule } from './socket/socket.module';
+import { CWithdraworder } from './model/entities/withdraworder';
 
 @Module({
   imports: [
@@ -139,6 +140,7 @@ import { CSocketModule } from './socket/socket.module';
         CMailing,
         CDrop,
         CDropTranslation,
+        CWithdraworder,
       ],
       synchronize: true,
     }),
