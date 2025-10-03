@@ -56,6 +56,36 @@ export class CUsersAutoService {
     }
   }
 
+  // Крон-задача: сбрасывает subType у пользователей с истекшей подпиской
+  @Cron('0 0 * * * *') // каждый час
+  private async resetSubTypeForExpiredUsers(): Promise<void> {
+    try {
+      const now = new Date();
+      const users = await this.dataSource
+        .getRepository(CUser)
+        .createQueryBuilder('users')
+        .where(
+          `users.active='1' AND users.paid_until IS NOT NULL AND users.paid_until < '${this.appService.mysqlDate(
+            now,
+            'datetime',
+          )}' AND users.subType IS NOT NULL`,
+        )
+        .getMany();
+
+      if (!users.length) return;
+
+      for (const user of users) {
+        user.subType = null;
+        await this.dataSource.getRepository(CUser).save(user);
+      }
+    } catch (err) {
+      await this.errorsService.log(
+        'CUsersAutoService.resetSubTypeForExpiredUsers',
+        err,
+      );
+    }
+  }
+
   // письма с напоминанием пользователям, которые зарегистрировались, но никогда не покупали подписок
   @Cron('0 0 0 * * *') // every day 0:00 UTC
   private async noSubscriptionReminder(): Promise<void> {
