@@ -122,7 +122,6 @@ export class COutordersService {
           referee_email: user.email,
           amount: otkat,
         });
-        console.log(reforder);
         await this.dataSource.getRepository(CReforder).save(reforder);
         this.socketGateway.broadcast({ event: `user:reload:${referrer.id}` });
       }
@@ -130,11 +129,19 @@ export class COutordersService {
       if (tariff.type === 'subscription') {
         // subscription
         const now = new Date();
+
         user.paid_at = now;
+
         if (!user.paid_until || user.paid_until.getTime() < now.getTime())
           user.paid_until = new Date();
+
+        if (user.subType === 'dg-team' && user.children_limit === 0)
+          user.children_limit = 15;
+
         user.paid_until.setDate(user.paid_until.getDate() + tariff.period);
+
         if (!user.tg_invite) user.tg_invite = await this.buildInviteLink();
+
         this.mailService.userSubscription(user);
       }
 
@@ -285,11 +292,19 @@ export class COutordersService {
         if (tariff.type === 'subscription') {
           // subscription
           const now = new Date();
+
           user.paid_at = now;
+
           if (!user.paid_until || user.paid_until.getTime() < now.getTime())
             user.paid_until = new Date();
+
+          if (user.subType === 'dg-team' && user.children_limit === 0)
+            user.children_limit = 15;
+
           user.paid_until.setDate(user.paid_until.getDate() + tariff.period);
+
           if (!user.tg_invite) user.tg_invite = await this.buildInviteLink();
+
           this.mailService.userSubscription(user);
         }
 
