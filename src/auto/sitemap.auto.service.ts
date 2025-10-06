@@ -14,7 +14,7 @@ export class CSitemapAutoService {
     __dirname,
     cfg.mainsiteUrl === 'http://localhost:4200'
       ? '../../../front.landing/sitemap.xml'
-      : '../../../bithub-NestJS/sitemap.xml',
+      : '../../../bithub-landing-angular/sitemap.xml',
   );
 
   constructor(private dataSource: DataSource) {}
