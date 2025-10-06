@@ -5,6 +5,7 @@ import { CBackupsModule } from 'src/api.admin/backups/backups.module';
 import { CDailersAutoService } from './dailers.auto.service';
 import { CGuidesAutoService } from './guides.auto.service';
 import { CUsersAutoService } from './users.auto.service';
+import { CSitemapAutoService } from './sitemap.auto.service';
 
 @Module({
   imports: [CCommonModule, CBackupsModule],
@@ -14,6 +15,7 @@ import { CUsersAutoService } from './users.auto.service';
     CDailersAutoService,
     CGuidesAutoService,
     CUsersAutoService,
+    CSitemapAutoService,
   ],
 })
 export class CAutoModule {}

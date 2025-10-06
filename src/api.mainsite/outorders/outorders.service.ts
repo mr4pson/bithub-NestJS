@@ -142,7 +142,9 @@ export class COutordersService {
 
         if (!user.tg_invite) user.tg_invite = await this.buildInviteLink();
 
-        this.mailService.userSubscription(user);
+        if (user.subscribed) {
+          this.mailService.userSubscription(user);
+        }
       }
 
       if (tariff.type === 'onetime') {
@@ -305,7 +307,9 @@ export class COutordersService {
 
           if (!user.tg_invite) user.tg_invite = await this.buildInviteLink();
 
-          this.mailService.userSubscription(user);
+          if (user.subscribed) {
+            this.mailService.userSubscription(user);
+          }
         }
 
         if (tariff.type === 'onetime') {

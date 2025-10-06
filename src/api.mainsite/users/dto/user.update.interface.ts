@@ -3,6 +3,7 @@ export interface IUserUpdate {
   readonly name: string;
   readonly wallet: string;
   readonly img: string;
+  readonly ref_link: string;
   readonly tg_username: string;
   readonly tg_tasks: boolean;
   readonly tg_guides: boolean;

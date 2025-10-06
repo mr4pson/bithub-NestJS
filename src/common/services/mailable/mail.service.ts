@@ -12,6 +12,8 @@ import { CPromocode } from 'src/model/entities/promocode';
 import { CComment } from 'src/model/entities/comment';
 import { CShoporder } from 'src/model/entities/shoporder';
 import { CWithdraworder } from 'src/model/entities/withdraworder';
+import { CLangsService } from 'src/api.admin/langs/langs.service';
+import { CWordsService } from 'src/api.mainsite/words/words.service';
 
 @Injectable()
 export class CMailService extends CMailableService {
@@ -19,6 +21,8 @@ export class CMailService extends CMailableService {
     protected override dataSource: DataSource,
     protected errorsService: CErrorsService,
     protected appService: CAppService,
+    protected langService: CLangsService,
+    protected wordsService: CWordsService,
   ) {
     super(dataSource);
   }
@@ -119,7 +123,7 @@ export class CMailService extends CMailableService {
       const mainsiteUrl = cfg.mainsiteUrl; // will use in eval
       const subject = mtd.subject;
       const content = eval('`' + mtd.content + '`');
-      await this.sendMessage(user.email, subject, content);
+      await this.sendMessage(user.email, subject, content, user);
     } catch (err) {
       await this.errorsService.log(
         'CMailService.userNosubscriptionReminder',
@@ -140,7 +144,7 @@ export class CMailService extends CMailableService {
       const mainsiteUrl = cfg.mainsiteUrl; // will use in eval
       const subject = mtd.subject;
       const content = eval('`' + mtd.content + '`');
-      await this.sendMessage(user.email, subject, content);
+      await this.sendMessage(user.email, subject, content, user);
     } catch (err) {
       await this.errorsService.log('CMailService.userNosubscriptionPromo', err);
     }
@@ -155,7 +159,7 @@ export class CMailService extends CMailableService {
       const mainsiteUrl = cfg.mainsiteUrl; // will use in eval
       const subject = mtd.subject;
       const content = eval('`' + mtd.content + '`');
-      await this.sendMessage(user.email, subject, content);
+      await this.sendMessage(user.email, subject, content, user);
     } catch (err) {
       await this.errorsService.log('CMailService.userNopayReminder', err);
     }
@@ -167,7 +171,8 @@ export class CMailService extends CMailableService {
       const mainsiteUrl = cfg.mainsiteUrl; // will use in eval
       const subject = mtd.subject;
       const content = eval('`' + mtd.content + '`');
-      await this.sendMessage(user.email, subject, content);
+
+      await this.sendMessage(user.email, subject, content, user);
     } catch (err) {
       await this.errorsService.log('CMailService.userRegister', err);
     }
@@ -181,7 +186,7 @@ export class CMailService extends CMailableService {
       );
       const subject = mtd.subject;
       const content = eval('`' + mtd.content + '`');
-      await this.sendMessage(user.email, subject, content);
+      await this.sendMessage(user.email, subject, content, user);
     } catch (err) {
       await this.errorsService.log('CMailService.userSubscription', err);
     }
@@ -200,7 +205,7 @@ export class CMailService extends CMailableService {
       ); // will use in eval
       const subject = mtd.subject;
       const content = eval('`' + mtd.content + '`');
-      await this.sendMessage(user.email, subject, content);
+      await this.sendMessage(user.email, subject, content, user);
     } catch (err) {
       await this.errorsService.log('CMailService.userSubscription', err);
     }
@@ -214,6 +219,7 @@ export class CMailService extends CMailableService {
     to: string,
     subject: string,
     html: string,
+    user?: CUser,
   ): Promise<void> {
     const host = (
       await this.dataSource
@@ -255,6 +261,20 @@ export class CMailService extends CMailableService {
       throw 'some SMTP setting not found';
     }
 
+    const lang = await this.langService.one(user?.lang_id || 1); // set default lang for templates
+    const slug = lang.data.slug || 'en';
+    const words = await this.wordsService.all();
+    const unsubscribeWord = words.data.common.unsubscribe[slug];
+    const fromEmailWord = words.data.common['from-email'][slug];
+
+    let htmlWithUnsubscribe = html;
+
+    if (user) {
+      htmlWithUnsubscribe =
+        html +
+        `<br><br><hr><small><a href="${cfg.mainsiteUrl}/${slug}/unsubscribe/${user.uuid}">${unsubscribeWord}</a> ${fromEmailWord}</small>`;
+    }
+
     const transporter = Nodemailer.createTransport({
       host,
       name: hostname,
@@ -262,7 +282,12 @@ export class CMailService extends CMailableService {
       secure: secure === 'true',
       auth: { user: login, pass: pw },
     });
-    const data = await transporter.sendMail({ from, to, subject, html });
+    const data = await transporter.sendMail({
+      from,
+      to,
+      subject,
+      html: htmlWithUnsubscribe,
+    });
     console.log(
       new Date(),
       'CMailService.sendMessage response:',

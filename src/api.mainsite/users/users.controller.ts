@@ -57,9 +57,12 @@ export class CUsersController {
     return this.usersService.one(parseInt(id), visitor_id);
   }
 
-  @Post('can-be-parent/:uuid')
-  public canBeParent(@Param('uuid') uuid: string): Promise<IResponse<void>> {
-    return this.usersService.canBeParent(uuid);
+  @Post('can-be-parent/:uuid/:index')
+  public canBeParent(
+    @Param('uuid') uuid: string,
+    @Param('index') index: string,
+  ): Promise<IResponse<void>> {
+    return this.usersService.canBeParent(uuid, parseInt(index));
   }
 
   @Post('is-exists/:uuid')
@@ -96,6 +99,11 @@ export class CUsersController {
   @Post('recover')
   public recover(@Body() dto: IUserRecover): Promise<IResponse<void>> {
     return this.usersService.recover(dto);
+  }
+
+  @Post('unsubscribe/:uuid')
+  public unsubscribe(@Param('uuid') uuid: string): Promise<IResponse<void>> {
+    return this.usersService.unsubscribe(uuid);
   }
 
   @Post('enter-by-token')

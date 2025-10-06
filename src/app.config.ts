@@ -36,8 +36,8 @@ export interface IEncryptionConfig {
   readonly iv: string;
 }
 
-const env = process.env.env;
-// const env = 'dev';
+// const env = process.env.env;
+const env = 'dev';
 const configs: IKeyValue<IConfig> = {
   dev: {
     mainsiteUrl: 'http://localhost:4200',
@@ -48,8 +48,8 @@ const configs: IKeyValue<IConfig> = {
       'https://app.bithab.vio.net.ua',
       'https://bithab.vio.net.ua',
       'http://localhost:4200',
-      'http://localhost:56720',
-      'http://localhost:60580',
+      'http://localhost:4201',
+      'http://localhost:58420',
     ],
     //dbHost: "localhost",
     // dbHost: '185.151.245.92',

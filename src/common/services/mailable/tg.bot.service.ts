@@ -11,6 +11,7 @@ import { CNetworkService } from '../network.service';
 import { CErrorsService } from '../errors.service';
 import { CAppService } from '../app.service';
 import { CArticle } from 'src/model/entities/article';
+import { CShopitem } from 'src/model/entities/shopitem';
 
 export interface ITgResponse {
   readonly ok: boolean;
@@ -127,6 +128,28 @@ export class CTgBotService extends CMailableService implements OnModuleInit {
     } catch (err) {
       await this.errorsService.log(
         'api.admin/CTgBotService.userNewarticle',
+        err,
+      );
+      return -1;
+    }
+  }
+
+  public async userNewShopitem(
+    user: CUser,
+    shopitem: CShopitem,
+  ): Promise<number> {
+    try {
+      const mtd = await this.getMailtemplateData(
+        'user-tg-newshopitem',
+        user.lang_id,
+      );
+      const mainsiteUrl = cfg.mainsiteUrl; // will use in eval
+      const content = eval('`' + mtd.content + '`');
+      const statusCode = await this.sendMessage(user.tg_id, content);
+      return statusCode;
+    } catch (err) {
+      await this.errorsService.log(
+        'api.admin/CTgBotService.userNewshopitem',
         err,
       );
       return -1;

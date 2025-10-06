@@ -48,6 +48,10 @@ export class CUser extends CEntity implements IChildable, IImagable {
   @Column({ nullable: true, default: null })
   public img: string;
 
+  @Index({ unique: true })
+  @Column({ nullable: true, default: null })
+  public ref_link: string;
+
   @Column({ nullable: false, default: true })
   public active: boolean;
 
@@ -88,6 +92,9 @@ export class CUser extends CEntity implements IChildable, IImagable {
   @Column({ nullable: false, default: 10 })
   public referral_buy_percent: number;
 
+  @Column({ nullable: false, default: true })
+  public subscribed: boolean; // подписка на рассылку
+
   @Column({ nullable: true, default: null })
   public tg_username: string;
 
@@ -106,6 +113,9 @@ export class CUser extends CEntity implements IChildable, IImagable {
 
   @Column({ nullable: false, default: true })
   public tg_articles: boolean; // получать новые статьи
+
+  @Column({ nullable: false, default: true })
+  public tg_shopitems: boolean; // получать новые товары
 
   @Column({ nullable: false, default: true })
   public tg_deadlines: boolean; // получать напоминания о дедлайнах для невыполненных тасков по избранным гайдам

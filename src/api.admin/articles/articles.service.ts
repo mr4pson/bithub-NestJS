@@ -132,6 +132,7 @@ export class CArticlesService extends CImagableService {
     try {
       const dto = JSON.parse(fd.data) as IArticleCreate;
       const x = this.dataSource.getRepository(CArticle).create(dto);
+
       await this.buildImg(x, uploads);
       x.slug = await this.slugService.checkSlug(
         this.dataSource.getRepository(CArticle),
@@ -139,7 +140,10 @@ export class CArticlesService extends CImagableService {
       );
       x.yt_content = this.appService.adjustYtContent(x.yt_content);
       await this.dataSource.getRepository(CArticle).save(x);
-      this.tgNotifyNewarticle(x);
+
+      if (x.active) {
+        this.tgNotifyNewarticle(x);
+      }
       return { statusCode: 201, data: x };
     } catch (err) {
       const error = await this.errorsService.log(

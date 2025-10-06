@@ -127,6 +127,7 @@ export class CUsersAutoService {
 
       // рассылаем рекламу
       for (const user of users) {
+        if (!user.subscribed) continue; // если отписан от рассылки, не шлем
         await this.mailService.userNosubscriptionReminder(user);
         await this.appService.pause(60000); // тут пока ставим одно письмо в минуту, zoho-почта блокирует спам
       }
@@ -200,6 +201,7 @@ export class CUsersAutoService {
 
       // рассылаем промокод
       for (const user of users) {
+        if (!user.subscribed) continue; // если отписан от рассылки, не шлем
         await this.mailService.userNosubscriptionPromo(user, promocode);
         await this.appService.pause(60000); // тут пока ставим одно письмо в минуту, zoho-почта блокирует спам
       }
@@ -253,7 +255,7 @@ export class CUsersAutoService {
         const user = await this.dataSource
           .getRepository(CUser)
           .findOne({ where: { email: inorder.user_email, active: true } });
-        if (!user) continue;
+        if (!user || !user.subscribed) continue;
         await this.mailService.userNopayReminder(user);
         await this.appService.pause(60000); // тут пока ставим одно письмо в минуту, zoho-почта блокирует спам
       }

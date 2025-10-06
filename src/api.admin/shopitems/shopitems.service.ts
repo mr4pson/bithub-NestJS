@@ -8,9 +8,11 @@ import { IJsonFormData } from 'src/model/dto/json.formdata,interface';
 import { IResponse } from 'src/model/dto/response.interface';
 import { CShopitem } from 'src/model/entities/shopitem';
 import { IKeyValue } from 'src/model/keyvalue.interface';
-import { DataSource, In } from 'typeorm';
+import { DataSource, In, IsNull, Not } from 'typeorm';
 import { IShopitemCreate } from './dto/shopitem.create.interface';
 import { IShopitemUpdate } from './dto/shopitem.update.interface';
+import { CUser } from 'src/model/entities/user';
+import { CTgBotService } from 'src/common/services/mailable/tg.bot.service';
 
 @Injectable()
 export class CShopitemsService extends CImagableService {
@@ -23,6 +25,7 @@ export class CShopitemsService extends CImagableService {
     protected uploadsService: CUploadsService,
     protected appService: CAppService,
     protected errorsService: CErrorsService,
+    protected tgBotService: CTgBotService,
   ) {
     super(uploadsService, dataSource);
   }
@@ -161,6 +164,11 @@ export class CShopitemsService extends CImagableService {
       const x = this.dataSource.getRepository(CShopitem).create(dto);
       await this.buildImg(x, uploads);
       await this.dataSource.getRepository(CShopitem).save(x);
+
+      if (x.active) {
+        this.tgNotifyNewShopitem(x);
+      }
+
       return { statusCode: 201, data: x };
     } catch (err) {
       const error = await this.errorsService.log(
@@ -218,6 +226,31 @@ export class CShopitemsService extends CImagableService {
     }
 
     return filter;
+  }
+
+  private async tgNotifyNewShopitem(shopitem: CShopitem): Promise<void> {
+    try {
+      // отправляем тем, у кого включен параметр tg_articles
+      const users = await this.dataSource.getRepository(CUser).find({
+        where: {
+          active: true,
+          tg_id: Not(IsNull()),
+          tg_active: true,
+          tg_shopitems: true,
+        },
+        relations: ['lang'],
+      });
+
+      for (const user of users) {
+        await this.appService.pause(1000); // не больше 30 сообщений в секунду, возьмем с запасом - 1 в секунду
+        await this.tgBotService.userNewShopitem(user, shopitem);
+      }
+    } catch (err) {
+      await this.errorsService.log(
+        'api.admin/CArticlesService.tgNotifyNewshopitem',
+        err,
+      );
+    }
   }
 
   private async fakeInit(): Promise<void> {

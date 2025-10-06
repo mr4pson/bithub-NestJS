@@ -156,12 +156,23 @@ export class CUsersService extends CImagableService {
     }
   }
 
-  public async canBeParent(uuid: string): Promise<IResponse<void>> {
+  public async canBeParent(
+    uuid: string,
+    index: number,
+  ): Promise<IResponse<void>> {
     try {
       const user = await this.getUser(uuid, 'uuid');
+
       if (!user) return { statusCode: 404, error: 'user not found' };
+
+      if (index !== user.children_q + 1)
+        return { statusCode: 406, error: 'Sub link is outdated' };
+
+      if (!user) return { statusCode: 404, error: 'user not found' };
+
       if (user.children_limit <= user.children_q)
         return { statusCode: 409, error: 'children limit exhausted' };
+
       return { statusCode: 200 };
     } catch (err) {
       const error = await this.errorsService.log(
@@ -174,12 +185,36 @@ export class CUsersService extends CImagableService {
 
   public async isExists(uuid: string): Promise<IResponse<void>> {
     try {
-      const user = await this.getUser(uuid, 'uuid');
+      let user = await this.getUser(uuid, 'ref_link');
+
+      if (!user) {
+        user = await this.getUser(uuid, 'uuid');
+      }
+
       if (!user) return { statusCode: 404, error: 'user not found' };
       return { statusCode: 200 };
     } catch (err) {
       const error = await this.errorsService.log(
         'api.mainsite/CUsersService.isExists',
+        err,
+      );
+      return { statusCode: 500, error };
+    }
+  }
+
+  public async unsubscribe(uuid: string): Promise<IResponse<void>> {
+    try {
+      const user = await this.getUser(uuid, 'uuid');
+      if (!user) return { statusCode: 404, error: 'user not found' };
+
+      user.subscribed = false;
+
+      await this.dataSource.getRepository(CUser).save(user);
+
+      return { statusCode: 200 };
+    } catch (err) {
+      const error = await this.errorsService.log(
+        'api.mainsite/CUsersService.unsubscribe',
         err,
       );
       return { statusCode: 500, error };
@@ -277,7 +312,12 @@ export class CUsersService extends CImagableService {
       let referrer_id: number = null;
 
       if (dto.referrer_uuid) {
-        const referrer = await this.getUser(dto.referrer_uuid, 'uuid');
+        let referrer = await this.getUser(dto.referrer_uuid, 'ref_link');
+
+        if (!referrer) {
+          referrer = await this.getUser(dto.referrer_uuid, 'uuid');
+        }
+
         if (!referrer) return { statusCode: 412, error: 'referrer not found' };
         referrer_id = referrer.id;
       }
@@ -597,7 +637,7 @@ export class CUsersService extends CImagableService {
 
   private getUser(
     identifier: number | string,
-    field: 'id' | 'uuid',
+    field: 'id' | 'uuid' | 'ref_link',
   ): Promise<CUser> {
     return this.dataSource
       .getRepository(CUser)
@@ -615,6 +655,7 @@ export class CUsersService extends CImagableService {
       name: dto.name,
       wallet: dto.wallet,
       img: dto.img,
+      ref_link: dto.ref_link,
       tg_username: dto.tg_username,
       tg_tasks: dto.tg_tasks,
       tg_guides: dto.tg_guides,
@@ -668,6 +709,7 @@ export class CUsersService extends CImagableService {
       referral_percent: user.referral_percent,
       referral_buy_percent: user.referral_buy_percent,
       refEarnings,
+      ref_link: user.ref_link,
       tg_username: user.tg_username,
       tg_tasks: user.tg_tasks,
       tg_guides: user.tg_guides,

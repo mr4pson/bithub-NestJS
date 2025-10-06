@@ -19,6 +19,7 @@ export interface IUser {
   readonly overdue: boolean; // оплата просрочена
   readonly referral_percent: number;
   readonly referral_buy_percent: number;
+  readonly ref_link?: string;
   readonly refEarnings?: number;
   readonly tg_username?: string;
   readonly tg_tasks: boolean;

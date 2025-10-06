@@ -163,7 +163,10 @@ export class CGuidesService extends CImagableService {
           (t) => (t.yt_content = this.appService.adjustYtContent(t.yt_content)),
         );
       await this.dataSource.getRepository(CGuide).save(x);
-      this.tgNotifyNewguide(x);
+
+      if (x.active) {
+        this.tgNotifyNewguide(x);
+      }
       return { statusCode: 201, data: x };
     } catch (err) {
       const error = await this.errorsService.log(
