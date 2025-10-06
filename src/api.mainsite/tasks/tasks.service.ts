@@ -443,6 +443,7 @@ export class CTasksService {
   private buildGuide(guide: CGuide, langs: CLang[]): IGuide {
     const data: IGuide = {
       id: guide.id,
+      slug: guide.slug,
       name: {},
     };
 
