@@ -5,6 +5,7 @@ import { CFilesModule } from './files/files.module';
 import { CWordsModule } from './words/words.module';
 import { CAwardsModule } from './awards/awards.module';
 import { CArticlesModule } from './articles/articles.module';
+import { CPagesModule } from './pages/pages.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { CArticlesModule } from './articles/articles.module';
     CWordsModule,
     CAwardsModule,
     CArticlesModule,
+    CPagesModule,
   ],
 })
 export class CApiLandingModule {}
