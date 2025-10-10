@@ -189,23 +189,31 @@ export class CGuidesService extends CImagableService {
         .findOne({ where: { id: x.id }, relations: ['translations', 'tasks'] });
       await this.buildImg(x, uploads);
       await this.deleteUnbindedImgOnUpdate(x, old); // if img changed then delete old file
-      x.price = x.tasks
-        .filter((t) => t.type === 'main')
-        .reduce((acc, t) => acc + t.price, 0);
-      x.time = x.tasks
-        .filter((t) => t.type === 'main')
-        .reduce((acc, t) => acc + t.time, 0);
-      x.tasks
-        .filter((t) => t.contenttype === 'yt')
-        .forEach(
-          (t) => (t.yt_content = this.appService.adjustYtContent(t.yt_content)),
-        );
+      if (!dto.autosave) {
+        x.price = x.tasks
+          .filter((t) => t.type === 'main')
+          .reduce((acc, t) => acc + t.price, 0);
+        x.time = x.tasks
+          .filter((t) => t.type === 'main')
+          .reduce((acc, t) => acc + t.time, 0);
+        x.tasks
+          .filter((t) => t.contenttype === 'yt')
+          .forEach(
+            (t) =>
+              (t.yt_content = this.appService.adjustYtContent(t.yt_content)),
+          );
+      }
+
       await this.dataSource.getRepository(CGuide).save(x);
       await this.deleteUnbindedLinks();
-      await this.deleteUnbindedTasks();
+
+      if (!dto.autosave) {
+        await this.deleteUnbindedTasks();
+      }
+
       const newTasks = this.getNewTasks(x, old);
 
-      if (newTasks.length) {
+      if (newTasks.length && x.active && !dto.autosave) {
         this.tgNotifyNewtask(x, newTasks);
       }
 

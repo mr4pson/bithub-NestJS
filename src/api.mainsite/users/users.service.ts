@@ -27,6 +27,7 @@ import { CSetting } from 'src/model/entities/setting';
 import { CTgApiService } from 'src/common/services/tg.api.service';
 import { IRemoveSubacc } from './dto/user.remove-subacc.interface';
 import { CReforder } from 'src/model/entities/reforder';
+import { CLangsService } from 'src/api.admin/langs/langs.service';
 
 @Injectable()
 export class CUsersService extends CImagableService {
@@ -44,6 +45,7 @@ export class CUsersService extends CImagableService {
     protected uploadsService: CUploadsService,
     protected captchaService: CCaptchaService,
     protected tgapiService: CTgApiService,
+    protected langService: CLangsService,
   ) {
     super(uploadsService, dataSource);
   }
@@ -390,6 +392,23 @@ export class CUsersService extends CImagableService {
         .getRepository(CUser)
         .findOneBy({ id: user.id });
       await this.buildImg(user, uploads);
+
+      const existingUser = await this.getUser(dto.ref_link, 'ref_link');
+      const lang = await this.langService.one(user?.lang_id || 1); // set default lang for templates
+      const slug = lang.data.slug || 'en';
+
+      if (existingUser && existingUser.id !== user.id) {
+        return {
+          statusCode: 500,
+          error:
+            slug === 'en'
+              ? 'User with the same referral username already exists.'
+              : slug === 'ru'
+              ? 'Пользователь с таким же именем реферала уже существует.'
+              : 'Користувач із таким самим іменем користувача реферала вже існує.',
+        };
+      }
+
       await this.dataSource.getRepository(CUser).save(user);
       await this.deleteUnbindedImgOnUpdate(user, old);
       user = await this.getUser(user.id, 'id');

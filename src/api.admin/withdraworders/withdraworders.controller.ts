@@ -11,12 +11,13 @@ import { IGetList } from 'src/model/dto/getlist.interface';
 import { IResponse } from 'src/model/dto/response.interface';
 import { CWithdraworder } from 'src/model/entities/withdraworder';
 import { CWithdrawordersService } from './withdraworders.service';
+import { CAdminGuard } from 'src/common/services/guards/admin.guard';
 
 @Controller('api/admin/withdraworders')
 export class CWithdrawordersController {
   constructor(private withdrawordersService: CWithdrawordersService) {}
 
-  @UseGuards(COwnerGuard)
+  @UseGuards(CAdminGuard)
   @Post('chunk')
   public chunk(@Body() dto: IGetList): Promise<IResponse<CWithdraworder[]>> {
     return this.withdrawordersService.chunk(dto);

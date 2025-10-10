@@ -43,6 +43,7 @@ export class COutordersService {
         relations: ['referrer'],
       });
       if (!user) return { statusCode: 404, error: 'user not found' };
+      const currentUserSubType = user.subType;
       const tariff = await this.dataSource
         .getRepository(CTariff)
         .findOne({ where: { id: dto.tariff_id }, relations: ['translations'] });
@@ -132,11 +133,16 @@ export class COutordersService {
 
         user.paid_at = now;
 
-        if (!user.paid_until || user.paid_until.getTime() < now.getTime())
+        if (!user.paid_until || user.paid_until.getTime() < now.getTime()) {
           user.paid_until = new Date();
+        }
 
-        if (user.subType === 'dg-team' && user.children_limit === 0)
-          user.children_limit = 15;
+        if (
+          user.paid_until.getTime() >= now.getTime() &&
+          currentUserSubType !== 'dg-team' &&
+          user.subType === 'dg-team'
+        )
+          user.children_limit += 15;
 
         user.paid_until.setDate(user.paid_until.getDate() + tariff.period);
 
@@ -273,6 +279,7 @@ export class COutordersService {
         });
         if (!user) throw 'user not found';
 
+        const currentUserSubType = user.subType;
         const tariff = await this.dataSource.getRepository(CTariff).findOne({
           where: { id: outorder.tariff_id },
           relations: ['translations'],
@@ -297,11 +304,16 @@ export class COutordersService {
 
           user.paid_at = now;
 
-          if (!user.paid_until || user.paid_until.getTime() < now.getTime())
+          if (!user.paid_until || user.paid_until.getTime() < now.getTime()) {
             user.paid_until = new Date();
+          }
 
-          if (user.subType === 'dg-team' && user.children_limit === 0)
-            user.children_limit = 15;
+          if (
+            user.paid_until.getTime() >= now.getTime() &&
+            currentUserSubType !== 'dg-team' &&
+            user.subType === 'dg-team'
+          )
+            user.children_limit += 15;
 
           user.paid_until.setDate(user.paid_until.getDate() + tariff.period);
 

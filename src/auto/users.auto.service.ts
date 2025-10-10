@@ -76,6 +76,7 @@ export class CUsersAutoService {
 
       for (const user of users) {
         user.subType = null;
+        user.children_limit = 0;
         await this.dataSource.getRepository(CUser).save(user);
       }
     } catch (err) {
