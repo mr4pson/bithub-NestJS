@@ -196,9 +196,11 @@ export class CUsersService extends CImagableService {
           username: from.username || null,
           language_code: from.language_code || null,
         };
-        const userDataB64 = encodeURIComponent(
-          Buffer.from(JSON.stringify(userDataJson)).toString('base64'),
+        // raw base64 (to be signed), URL-encode only for the query parameter
+        const userDataB64 = Buffer.from(JSON.stringify(userDataJson)).toString(
+          'base64',
         );
+        const userDataParam = encodeURIComponent(userDataB64);
         const expires = Math.floor(Date.now() / 1000) + 5 * 60; // 5 minutes
         const signPayload = `${userDataB64}|${expires}`;
         const signature = crypto
@@ -206,7 +208,7 @@ export class CUsersService extends CImagableService {
           .update(signPayload)
           .digest('hex');
 
-        const url = `${cfg.mainsiteUrl}/${from.language_code}/login/${tgId}?expires=${expires}&userData=${userDataB64}&signature=${signature}`;
+        const url = `${cfg.mainsiteUrl}/${from.language_code}/login/${tgId}?expires=${expires}&userData=${userDataParam}&signature=${signature}`;
 
         let lang = await this.dataSource
           .getRepository(CLang)
