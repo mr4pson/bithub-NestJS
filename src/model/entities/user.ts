@@ -31,10 +31,10 @@ export class CUser extends CEntity implements IChildable, IImagable {
   @Column({ nullable: true, default: null })
   public referrer_id: number;
 
-  @Column({ nullable: false, unique: true })
+  @Column({ nullable: true, unique: true })
   public email: string;
 
-  @Column({ nullable: false, select: false })
+  @Column({ nullable: true, select: false })
   public password: string;
 
   @Index()
