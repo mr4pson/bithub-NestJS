@@ -183,6 +183,29 @@ export class CUsersService extends CImagableService {
         util.inspect(dto, { showHidden: false, depth: null, colors: true }),
       );
 
+      // Telegrame start message handling
+      if (dto.message?.text?.includes('/start')) {
+        delete this.steps[from.id];
+
+        const user = await this.dataSource
+          .getRepository(CUser)
+          .findOneBy({ tg_id: from.id });
+
+        if (!user) {
+          // ask user to provide email to bind account
+          this.steps[from.id] = 'email';
+
+          await this.tgBotService.sendMessage(
+            from.id,
+            'Please reply with your e-mail address to link your Telegram to either an existing account or to a new one.',
+          );
+
+          return;
+        }
+
+        await this.authenticateTgUser(from);
+      }
+
       // handle incoming plain email replies to bind account
       if (dto.message?.text && this.steps[from.id] === 'email') {
         const text = dto.message.text.trim();
@@ -230,29 +253,6 @@ export class CUsersService extends CImagableService {
           );
           return;
         }
-      }
-
-      // активация telegram-уведомлений
-      if (dto.message?.text?.includes('/start')) {
-        delete this.steps[from.id];
-
-        const user = await this.dataSource
-          .getRepository(CUser)
-          .findOneBy({ tg_id: from.id });
-
-        if (!user) {
-          // ask user to provide email to bind account
-          this.steps[from.id] = 'email';
-
-          await this.tgBotService.sendMessage(
-            from.id,
-            'Please reply with your e-mail address to link your Telegram to either an existing account or to a new one.',
-          );
-
-          return;
-        }
-
-        await this.authenticateTgUser(from);
       }
 
       // деактивация telegram-уведомлений
