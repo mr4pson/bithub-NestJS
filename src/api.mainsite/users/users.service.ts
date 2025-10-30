@@ -109,6 +109,8 @@ export class CUsersService extends CImagableService {
     );
     const user = await this.tgFindOrCreate(decoded, tz);
 
+    console.log(user.tg_id, id);
+
     if (!user || id !== user.tg_id)
       return { ok: false, error: 'internal_error' } as any;
 
