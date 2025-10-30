@@ -741,7 +741,7 @@ export class CUsersService extends CImagableService {
     return this.dataSource.getRepository(CUser).create({
       lang_id: dto.lang_id,
       name: dto.name,
-      email: dto.email.trim(),
+      email: dto.email ? dto.email.trim() : null,
       password: this.authService.buildHash(dto.password),
       wallet: dto.wallet,
       subType: null,
