@@ -835,7 +835,7 @@ export class CUsersService extends CImagableService {
           tz,
         } as IUserRegister;
 
-        this.buildSafeCreate(payload, tz, null, null);
+        const user = this.buildSafeCreate(payload, tz, null, null);
         await repo.save(user);
       } else {
         let changed = false;
