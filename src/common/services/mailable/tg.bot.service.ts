@@ -12,7 +12,6 @@ import { CErrorsService } from '../errors.service';
 import { CAppService } from '../app.service';
 import { CArticle } from 'src/model/entities/article';
 import { CShopitem } from 'src/model/entities/shopitem';
-import * as crypto from 'crypto';
 
 export interface ITgResponse {
   readonly ok: boolean;

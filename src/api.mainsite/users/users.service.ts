@@ -91,17 +91,21 @@ export class CUsersService extends CImagableService {
       return { ok: false, error: 'expired' } as any;
     }
 
+    // decode URL-encoded base64 that was sent in the query param
+    const userDataB64 = decodeURIComponent(userData);
     const expected = crypto
       .createHmac('sha256', cfg.encryption.key)
-      .update(`${userData}|${expires}`)
+      .update(`${userDataB64}|${expires}`)
       .digest('hex');
+
+    console.log(expected, signature);
 
     if (expected !== signature) {
       return { ok: false, error: 'invalid_signature' } as any;
     }
 
     const decoded = JSON.parse(
-      Buffer.from(decodeURIComponent(userData), 'base64').toString('utf8'),
+      Buffer.from(userDataB64, 'base64').toString('utf8'),
     );
     const user = await this.tgFindOrCreate(decoded, tz);
 
