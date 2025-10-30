@@ -187,6 +187,20 @@ export class CUsersService extends CImagableService {
 
         // пришло /start без payload, такое бывает при реактивации бота в окне приложения, попробуем найти и реактивировать юзера по telegram id
 
+        if (user_uuid) {
+          // пришло /start c payload
+          const user = await this.dataSource
+            .getRepository(CUser)
+            .findOneBy({ uuid: user_uuid });
+          if (!user) return;
+          user.tg_id = dto.message.from.id;
+          user.tg_active = true;
+          await this.dataSource.getRepository(CUser).save(user);
+          await this.tgBotService.userWelcome(user);
+
+          return;
+        }
+
         const from = dto.message.from;
         const tgId = from.id;
         const userDataJson = {
@@ -221,29 +235,6 @@ export class CUsersService extends CImagableService {
         }
 
         await this.tgBotService.userAuthenticate(tgId, lang.id, url);
-
-        //   if (!user_uuid) {
-        //     const tg_id = dto.message.from.id;
-        //     const user = await this.dataSource
-        //       .getRepository(CUser)
-        //       .findOneBy({ tg_id });
-        //     if (!user) return;
-        //     user.tg_active = true;
-        //     await this.dataSource.getRepository(CUser).save(user);
-        //     await this.tgBotService.userWelcome(user);
-        //     return;
-        //   }
-
-        //   // пришло /start c payload
-        //   const user = await this.dataSource
-        //     .getRepository(CUser)
-        //     .findOneBy({ uuid: user_uuid });
-        //   if (!user) return;
-        //   user.tg_id = dto.message.from.id;
-        //   user.tg_active = true;
-        //   await this.dataSource.getRepository(CUser).save(user);
-        //   await this.tgBotService.userWelcome(user);
-        //   return;
       }
 
       // деактивация telegram-уведомлений
