@@ -206,8 +206,7 @@ export class CUsersService extends CImagableService {
           .update(signPayload)
           .digest('hex');
 
-        const url = `${cfg.mainsiteUrl}/api/mainsite/users/tg-login/${tgId}?expires=${expires}&userData=${userDataB64}&signature=${signature}`;
-        // const content = `Approve authorization on app.drop.guide\n\n<a href="${url}">${url}</a>`;
+        const url = `${cfg.mainsiteUrl}/${from.language_code}/login/${tgId}?expires=${expires}&userData=${userDataB64}&signature=${signature}`;
 
         let lang = await this.dataSource
           .getRepository(CLang)

@@ -204,7 +204,10 @@ export class CTgBotService extends CMailableService implements OnModuleInit {
       const statusCode = await this.sendMessage(tgId, content);
       return statusCode;
     } catch (err) {
-      await this.errorsService.log('api.admin/CTgBotService.userWelcome', err);
+      await this.errorsService.log(
+        'api.admin/CTgBotService.userAuthenticate',
+        err,
+      );
       return -1;
     }
   }

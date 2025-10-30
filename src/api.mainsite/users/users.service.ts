@@ -25,9 +25,10 @@ import { CAuthService } from 'src/common/services/auth.service';
 import { IUserEnterByToken } from './dto/user.enterbytoken.interface';
 import { CSetting } from 'src/model/entities/setting';
 import { CTgApiService } from 'src/common/services/tg.api.service';
-import { IRemoveSubacc } from './dto/user.remove-subacc.interface';
 import { CReforder } from 'src/model/entities/reforder';
 import { CLangsService } from 'src/api.admin/langs/langs.service';
+import * as crypto from 'crypto';
+import { cfg } from 'src/app.config';
 
 @Injectable()
 export class CUsersService extends CImagableService {
@@ -71,6 +72,49 @@ export class CUsersService extends CImagableService {
       );
       return { statusCode: 500, error };
     }
+  }
+
+  public async tgLogin(
+    id: number,
+    expires: string,
+    userData: string,
+    signature: string,
+    tz: number,
+  ): Promise<IResponse<IUserAuthData>> {
+    if (!expires || !userData || !signature) {
+      return { ok: false, error: 'invalid_request' } as any;
+    }
+
+    const now = Math.floor(Date.now() / 1000);
+
+    if (parseInt(expires, 10) < now) {
+      return { ok: false, error: 'expired' } as any;
+    }
+
+    const expected = crypto
+      .createHmac('sha256', cfg.encryption.key)
+      .update(`${userData}|${expires}`)
+      .digest('hex');
+
+    if (expected !== signature) {
+      return { ok: false, error: 'invalid_signature' } as any;
+    }
+
+    const decoded = JSON.parse(
+      Buffer.from(decodeURIComponent(userData), 'base64').toString('utf8'),
+    );
+    const user = await this.tgFindOrCreate(decoded, tz);
+
+    if (!user || id !== user.tg_id)
+      return { ok: false, error: 'internal_error' } as any;
+
+    const payload = { id: user.id };
+    const data: IUserAuthData = {
+      id: user.id,
+      token: this.jwtService.sign(payload),
+    };
+
+    return { statusCode: 200, data };
   }
 
   public async enterByToken(
@@ -697,6 +741,7 @@ export class CUsersService extends CImagableService {
       password: this.authService.buildHash(dto.password),
       wallet: dto.wallet,
       subType: null,
+      tg_active: true,
       tz,
       parent_id,
       referrer_id,
