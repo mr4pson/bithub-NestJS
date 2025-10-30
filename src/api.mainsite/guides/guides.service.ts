@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { CErrorsService } from 'src/common/services/errors.service';
 import { IGetList } from 'src/model/dto/getlist.interface';
 import { IResponse } from 'src/model/dto/response.interface';
-import { CGuide } from 'src/model/entities/guide';
+import { CGuide, GuideTypes } from 'src/model/entities/guide';
 import { DataSource, In } from 'typeorm';
 import { IGuide } from './dto/guide.interface';
 import { CLang } from 'src/model/entities/lang';
@@ -313,10 +313,42 @@ export class CGuidesService {
         return { statusCode: 404, error: 'guide not found' };
       }
 
+      let isJustViewed = false;
+      // mark viewed guide for user and capture viewedGuides array
+      let viewedGuidesArr: {
+        guide: { id: number; slug: string };
+        createdAt: string;
+      }[] = null;
+      if (user_id) {
+        const user = await this.dataSource
+          .getRepository(CUser)
+          .findOne({ where: { id: user_id } });
+        if (user && !user.subType && guide.type !== GuideTypes.Gem) {
+          const vg = Array.isArray(user.viewedGuides) ? user.viewedGuides : [];
+          const exists = vg.some((v) => v?.guide?.id === guide.id);
+          if (!exists && vg.length < 5) {
+            vg.push({
+              guide: { id: guide.id, slug: guide.slug },
+              createdAt: new Date().toISOString(),
+            });
+            user.viewedGuides = vg;
+            await this.dataSource.getRepository(CUser).save(user);
+            isJustViewed = true;
+          }
+          viewedGuidesArr = user.viewedGuides;
+        }
+      }
+
       const langs = await this.dataSource
         .getRepository(CLang)
         .find({ where: { active: true } });
-      const data = this.buildGuideFull(guide, langs);
+      const data = this.buildGuideFull(
+        guide,
+        langs,
+        viewedGuidesArr,
+        isJustViewed,
+      );
+
       return { statusCode: 200, data };
     } catch (err) {
       const error = await this.errorsService.log(
@@ -373,10 +405,41 @@ export class CGuidesService {
         return { statusCode: 404, error: 'guide not found' };
       }
 
+      let isJustViewed = false;
+      // mark viewed guide for user and capture viewedGuides array
+      let viewedGuidesArr2: {
+        guide: { id: number; slug: string };
+        createdAt: string;
+      }[] = null;
+      if (user_id) {
+        const user = await this.dataSource
+          .getRepository(CUser)
+          .findOne({ where: { id: user_id } });
+        if (user && !user.subType && guide.type !== GuideTypes.Gem) {
+          const vg = Array.isArray(user.viewedGuides) ? user.viewedGuides : [];
+          const exists = vg.some((v) => v?.guide?.id === guide.id);
+          if (!exists && vg.length < 5) {
+            vg.push({
+              guide: { id: guide.id, slug: guide.slug },
+              createdAt: new Date().toISOString(),
+            });
+            user.viewedGuides = vg;
+            await this.dataSource.getRepository(CUser).save(user);
+            isJustViewed = true;
+          }
+          viewedGuidesArr2 = user.viewedGuides;
+        }
+      }
+
       const langs = await this.dataSource
         .getRepository(CLang)
         .find({ where: { active: true } });
-      const data = this.buildGuideFull(guide, langs);
+      const data = this.buildGuideFull(
+        guide,
+        langs,
+        viewedGuidesArr2,
+        isJustViewed,
+      );
       return { statusCode: 200, data };
     } catch (err) {
       const error = await this.errorsService.log(
@@ -602,8 +665,38 @@ export class CGuidesService {
     return data;
   }
 
-  private buildGuideFull(guide: CGuide, langs: CLang[]): IGuide {
+  private buildGuideFull(
+    guide: CGuide,
+    langs: CLang[],
+    viewedGuides?: { guide: { id: number; slug: string }; createdAt: string }[],
+    isJustViewed = false,
+  ): IGuide {
     const now = new Date();
+    // compute isTasksBlocked based on viewedGuides
+    let isBlocked = false;
+    let isTestPeriodEnded = false;
+
+    try {
+      if (Array.isArray(viewedGuides)) {
+        const found = viewedGuides.find((v) => v?.guide?.id === guide.id);
+
+        if (viewedGuides.length >= 5 && !found) {
+          isBlocked = true;
+        }
+        if (found) {
+          const created = new Date(found.createdAt);
+          const diffMs = Date.now() - created.getTime();
+          const days = diffMs / (1000 * 60 * 60 * 24);
+          if (days > 30) {
+            isBlocked = false;
+            isTestPeriodEnded = true;
+          }
+        }
+      }
+    } catch (e) {
+      // ignore
+    }
+
     const data: IGuide = {
       id: guide.id,
       slug: guide.slug,
@@ -633,6 +726,9 @@ export class CGuidesService {
         : 0,
       links: guide.links.map((l) => this.buildGuideLink(l)),
       tasks: guide.tasks.map((t) => this.buildTask(t, langs, now)),
+      isTasksBlocked: isBlocked,
+      isJustViewed,
+      isTestPeriodEnded,
     };
 
     for (const l of langs) {

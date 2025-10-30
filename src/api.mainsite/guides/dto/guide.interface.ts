@@ -31,4 +31,8 @@ export interface IGuide {
   // relations
   links?: IGuideLink[];
   tasks?: ITask[];
+  // whether tasks are blocked due to viewedGuides limit
+  isTasksBlocked?: boolean;
+  isJustViewed?: boolean;
+  isTestPeriodEnded?: boolean;
 }

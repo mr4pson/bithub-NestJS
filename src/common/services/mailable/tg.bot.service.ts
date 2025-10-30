@@ -215,10 +215,7 @@ export class CTgBotService extends CMailableService implements OnModuleInit {
   // utils
   /////////////////
 
-  protected async sendMessage(
-    chat_id: number,
-    content: string,
-  ): Promise<number> {
+  public async sendMessage(chat_id: number, content: string): Promise<number> {
     try {
       const dto = { chat_id, text: content, parse_mode: 'HTML' };
       await this.sendRequest('sendMessage', dto);

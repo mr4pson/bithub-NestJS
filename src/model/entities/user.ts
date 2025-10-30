@@ -178,6 +178,13 @@ export class CUser extends CEntity implements IChildable, IImagable {
   })
   public favoritions: CFavorition[];
 
+  // список просмотренных гайдов: [{ guide: { id, slug }, createdAt: string }]
+  @Column({ type: 'json', nullable: true, default: null })
+  public viewedGuides: {
+    guide: { id: number; slug: string };
+    createdAt: string;
+  }[];
+
   //////////////
   // helpers
   //////////////

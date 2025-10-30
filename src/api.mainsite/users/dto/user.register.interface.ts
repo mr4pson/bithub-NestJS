@@ -1,7 +1,7 @@
 export interface IUserRegister {
   readonly lang_id: number;
   readonly name: string;
-  readonly email?: string;
+  email?: string;
   // readonly code: string;
   readonly password?: string;
   readonly wallet?: string;

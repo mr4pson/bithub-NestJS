@@ -11,7 +11,7 @@ import { IKeyValue } from 'src/model/keyvalue.interface';
 import { DataSource, In } from 'typeorm';
 import { IUserCreate } from './dto/user.create.interface';
 import { IUserUpdate } from './dto/user.update.interface';
-import { ITgEvent } from './dto/tg.event.interface';
+import { ITgEvent, ITgFrom } from './dto/tg.event.interface';
 import { CSetting } from 'src/model/entities/setting';
 import { CTgBotService } from 'src/common/services/mailable/tg.bot.service';
 import { CAuthService } from 'src/common/services/auth.service';
@@ -25,6 +25,7 @@ export class CUsersService extends CImagableService {
   protected entity = 'CUser';
   protected folder = 'users';
   protected resizeMap: IKeyValue<number> = { img: 300 };
+  private steps: Record<number, 'email'> = {};
 
   constructor(
     protected dataSource: DataSource,
@@ -170,6 +171,7 @@ export class CUsersService extends CImagableService {
 
   public async onTgEvent(dto: ITgEvent, token: string): Promise<void> {
     try {
+      const from = dto.message.from;
       const tgbotWhToken = (
         await this.dataSource
           .getRepository(CSetting)
@@ -181,60 +183,92 @@ export class CUsersService extends CImagableService {
         util.inspect(dto, { showHidden: false, depth: null, colors: true }),
       );
 
+      // handle incoming plain email replies to bind account
+      if (dto.message?.text && this.steps[from.id] === 'email') {
+        const text = dto.message.text.trim();
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+        if (emailRegex.test(text)) {
+          try {
+            const foundUser = await this.dataSource
+              .getRepository(CUser)
+              .findOne({ where: { email: text } });
+            if (foundUser) {
+              foundUser.tg_id = from.id;
+              foundUser.tg_active = true;
+              await this.dataSource.getRepository(CUser).save(foundUser);
+              await this.tgBotService.sendMessage(
+                from.id,
+                'Your Telegram has been linked to your account. Welcome!',
+              );
+              // await this.tgBotService.userWelcome(foundUser);
+            }
+            // else {
+            //   await this.tgBotService.sendMessage(
+            //     from.id,
+            //     'Account with this e-mail not found. Please check and try again.',
+            //   );
+            // }
+
+            await this.authenticateTgUser(from, text);
+
+            delete this.steps[from.id];
+
+            console.log(this.steps);
+          } catch (e) {
+            await this.errorsService.log(
+              'api.admin/CUsersService.onTgEvent.emailBind',
+              e,
+            );
+          }
+          return;
+        } else {
+          await this.tgBotService.sendMessage(
+            from.id,
+            'The e-mail address you provided is not valid. Please try again.',
+          );
+          return;
+        }
+      }
+
       // активация telegram-уведомлений
       if (dto.message?.text?.includes('/start')) {
-        const user_uuid = dto.message.text.split(' ')[1];
+        delete this.steps[from.id];
+        // const user_uuid = dto.message.text.split(' ')[1];
 
         // пришло /start без payload, такое бывает при реактивации бота в окне приложения, попробуем найти и реактивировать юзера по telegram id
 
-        if (user_uuid) {
-          // пришло /start c payload
-          const user = await this.dataSource
-            .getRepository(CUser)
-            .findOneBy({ uuid: user_uuid });
-          if (!user) return;
-          user.tg_id = dto.message.from.id;
-          user.tg_active = true;
-          await this.dataSource.getRepository(CUser).save(user);
-          await this.tgBotService.userWelcome(user);
+        // if (user_uuid) {
+        //   // пришло /start c payload
+        //   const user = await this.dataSource
+        //     .getRepository(CUser)
+        //     .findOneBy({ uuid: user_uuid });
+        //   if (!user) return;
+        //   user.tg_id = from.id;
+        //   user.tg_active = true;
+        //   await this.dataSource.getRepository(CUser).save(user);
+        //   await this.tgBotService.userWelcome(user);
+
+        //   return;
+        // }
+
+        const user = await this.dataSource
+          .getRepository(CUser)
+          .findOneBy({ tg_id: from.id });
+
+        if (!user) {
+          // ask user to provide email to bind account
+          this.steps[from.id] = 'email';
+
+          await this.tgBotService.sendMessage(
+            from.id,
+            'To link your Telegram to an existing account, please reply with your e-mail address.',
+          );
 
           return;
         }
 
-        const from = dto.message.from;
-        const tgId = from.id;
-        const userDataJson = {
-          id: from.id,
-          first_name: from.first_name || null,
-          is_bot: from.is_bot || null,
-          username: from.username || null,
-          language_code: from.language_code || null,
-        };
-        // raw base64 (to be signed), URL-encode only for the query parameter
-        const userDataB64 = Buffer.from(JSON.stringify(userDataJson)).toString(
-          'base64',
-        );
-        const userDataParam = encodeURIComponent(userDataB64);
-        const expires = Math.floor(Date.now() / 1000) + 5 * 60; // 5 minutes
-        const signPayload = `${userDataB64}|${expires}`;
-        const signature = crypto
-          .createHmac('sha256', cfg.encryption.key)
-          .update(signPayload)
-          .digest('hex');
-
-        const url = `${cfg.mainsiteUrl}/${from.language_code}/login/${tgId}?expires=${expires}&userData=${userDataParam}&signature=${signature}`;
-
-        let lang = await this.dataSource
-          .getRepository(CLang)
-          .findOne({ where: { slug: from.language_code } });
-
-        if (!lang) {
-          lang = await this.dataSource
-            .getRepository(CLang)
-            .findOneBy({ slug: 'en' });
-        }
-
-        await this.tgBotService.userAuthenticate(tgId, lang.id, url);
+        await this.authenticateTgUser(from);
       }
 
       // деактивация telegram-уведомлений
@@ -250,6 +284,53 @@ export class CUsersService extends CImagableService {
       }
     } catch (err) {
       await this.errorsService.log('api.admin/CUsersService.onTgEvent', err);
+    }
+  }
+
+  private async authenticateTgUser(
+    from: ITgFrom,
+    email?: string,
+  ): Promise<void> {
+    try {
+      const tgId = from.id;
+      const userDataJson = {
+        id: from.id,
+        first_name: from.first_name || null,
+        is_bot: from.is_bot || null,
+        email: email,
+        username: from.username || null,
+        language_code: from.language_code || null,
+      };
+      // raw base64 (to be signed), URL-encode only for the query parameter
+      const userDataB64 = Buffer.from(JSON.stringify(userDataJson)).toString(
+        'base64',
+      );
+      const userDataParam = encodeURIComponent(userDataB64);
+      const expires = Math.floor(Date.now() / 1000) + 5 * 60; // 5 minutes
+      const signPayload = `${userDataB64}|${expires}`;
+      const signature = crypto
+        .createHmac('sha256', cfg.encryption.key)
+        .update(signPayload)
+        .digest('hex');
+
+      const url = `${cfg.mainsiteUrl}/${from.language_code}/login/${tgId}?expires=${expires}&userData=${userDataParam}&signature=${signature}`;
+
+      let lang = await this.dataSource
+        .getRepository(CLang)
+        .findOne({ where: { slug: from.language_code } });
+
+      if (!lang) {
+        lang = await this.dataSource
+          .getRepository(CLang)
+          .findOneBy({ slug: 'en' });
+      }
+
+      await this.tgBotService.userAuthenticate(tgId, lang.id, url);
+    } catch (err) {
+      await this.errorsService.log(
+        'api.admin/CUsersService.authenticateTgUser',
+        err,
+      );
     }
   }
 
