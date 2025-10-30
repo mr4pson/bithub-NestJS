@@ -16,6 +16,9 @@ import { CSetting } from 'src/model/entities/setting';
 import { CTgBotService } from 'src/common/services/mailable/tg.bot.service';
 import { CAuthService } from 'src/common/services/auth.service';
 import * as util from 'util';
+import { cfg } from 'src/app.config';
+import * as crypto from 'crypto';
+import { CLang } from 'src/model/entities/lang';
 
 @Injectable()
 export class CUsersService extends CImagableService {
@@ -183,28 +186,63 @@ export class CUsersService extends CImagableService {
         const user_uuid = dto.message.text.split(' ')[1];
 
         // пришло /start без payload, такое бывает при реактивации бота в окне приложения, попробуем найти и реактивировать юзера по telegram id
-        if (!user_uuid) {
-          const tg_id = dto.message.from.id;
-          const user = await this.dataSource
-            .getRepository(CUser)
-            .findOneBy({ tg_id });
-          if (!user) return;
-          user.tg_active = true;
-          await this.dataSource.getRepository(CUser).save(user);
-          await this.tgBotService.userWelcome(user);
-          return;
+
+        const from = dto.message.from;
+        const tgId = from.id;
+        const userDataJson = {
+          id: from.id,
+          first_name: from.first_name || null,
+          is_bot: from.is_bot || null,
+          username: from.username || null,
+          language_code: from.language_code || null,
+        };
+        const userDataB64 = encodeURIComponent(
+          Buffer.from(JSON.stringify(userDataJson)).toString('base64'),
+        );
+        const expires = Math.floor(Date.now() / 1000) + 5 * 60; // 5 minutes
+        const signPayload = `${userDataB64}|${expires}`;
+        const signature = crypto
+          .createHmac('sha256', cfg.encryption.key)
+          .update(signPayload)
+          .digest('hex');
+
+        const url = `${cfg.mainsiteUrl}/api/mainsite/users/tg-login/${tgId}?expires=${expires}&userData=${userDataB64}&signature=${signature}`;
+        // const content = `Approve authorization on app.drop.guide\n\n<a href="${url}">${url}</a>`;
+
+        let lang = await this.dataSource
+          .getRepository(CLang)
+          .findOne({ where: { slug: from.language_code } });
+
+        if (!lang) {
+          lang = await this.dataSource
+            .getRepository(CLang)
+            .findOneBy({ slug: 'en' });
         }
 
-        // пришло /start c payload
-        const user = await this.dataSource
-          .getRepository(CUser)
-          .findOneBy({ uuid: user_uuid });
-        if (!user) return;
-        user.tg_id = dto.message.from.id;
-        user.tg_active = true;
-        await this.dataSource.getRepository(CUser).save(user);
-        await this.tgBotService.userWelcome(user);
-        return;
+        await this.tgBotService.userAuthenticate(tgId, lang.id, url);
+
+        //   if (!user_uuid) {
+        //     const tg_id = dto.message.from.id;
+        //     const user = await this.dataSource
+        //       .getRepository(CUser)
+        //       .findOneBy({ tg_id });
+        //     if (!user) return;
+        //     user.tg_active = true;
+        //     await this.dataSource.getRepository(CUser).save(user);
+        //     await this.tgBotService.userWelcome(user);
+        //     return;
+        //   }
+
+        //   // пришло /start c payload
+        //   const user = await this.dataSource
+        //     .getRepository(CUser)
+        //     .findOneBy({ uuid: user_uuid });
+        //   if (!user) return;
+        //   user.tg_id = dto.message.from.id;
+        //   user.tg_active = true;
+        //   await this.dataSource.getRepository(CUser).save(user);
+        //   await this.tgBotService.userWelcome(user);
+        //   return;
       }
 
       // деактивация telegram-уведомлений

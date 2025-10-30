@@ -453,7 +453,7 @@ export class CUsersService extends CImagableService {
     user_id: number,
   ): Promise<IResponse<void>> {
     try {
-      // здесь не будем проверять юзера на существование и активность, потому что такие случае не пропустит CUsersGuard
+      // здесь не будем проверять юзера на существование и активность, потому что такие случаи не пропустит CUsersGuard
       const user = await this.dataSource
         .getRepository(CUser)
         .createQueryBuilder('user')
@@ -764,5 +764,44 @@ export class CUsersService extends CImagableService {
       user.parent.paid_until &&
       user.parent.paid_until.getTime() > now.getTime()
     );
+  }
+
+  public async tgFindOrCreate(tgData: any, tz: number): Promise<CUser | null> {
+    try {
+      const tgId = tgData.id;
+
+      if (!tgId) return null;
+
+      const repo = this.dataSource.getRepository(CUser);
+      const user = await repo.findOne({ where: { tg_id: tgId } });
+
+      if (!user) {
+        const payload = {
+          active: true,
+          tg_id: tgId,
+          login: tgData.username ? `tg_${tgData.username}` : `tg_${tgId}`,
+          name: tgData.first_name || '',
+          last_name: tgData.last_name || '',
+          lang_id: 1,
+          tz,
+        } as IUserRegister;
+
+        this.buildSafeCreate(payload, tz, null, null);
+        await repo.save(user);
+      } else {
+        let changed = false;
+
+        if (tgData.first_name && user.name !== tgData.first_name) {
+          user.name = `${tgData.first_name} ${tgData.last_name || ''}`;
+          changed = true;
+        }
+
+        if (changed) await repo.save(user);
+      }
+      return user;
+    } catch (err) {
+      await this.errorsService.log('CUsersService.tgFindOrCreate', err);
+      return null;
+    }
   }
 }

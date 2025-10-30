@@ -12,6 +12,7 @@ import { CErrorsService } from '../errors.service';
 import { CAppService } from '../app.service';
 import { CArticle } from 'src/model/entities/article';
 import { CShopitem } from 'src/model/entities/shopitem';
+import * as crypto from 'crypto';
 
 export interface ITgResponse {
   readonly ok: boolean;
@@ -37,7 +38,7 @@ export class CTgBotService extends CMailableService implements OnModuleInit {
 
   public async onModuleInit(): Promise<void> {
     try {
-      //this.test();
+      // start background polling for Telegram updates
       if (!cfg.tgInitOnStart) return;
       const tgbotWhToken = (
         await this.dataSource
@@ -181,6 +182,26 @@ export class CTgBotService extends CMailableService implements OnModuleInit {
       const mainsiteUrl = cfg.mainsiteUrl; // will use in eval
       const content = eval('`' + mtd.content + '`');
       const statusCode = await this.sendMessage(user.tg_id, content);
+      return statusCode;
+    } catch (err) {
+      await this.errorsService.log('api.admin/CTgBotService.userWelcome', err);
+      return -1;
+    }
+  }
+
+  public async userAuthenticate(
+    tgId: number,
+    langId: number,
+    link: string,
+  ): Promise<number> {
+    try {
+      const mtd = await this.getMailtemplateData(
+        'user-tg-authenticate',
+        langId,
+      );
+      const mainsiteUrl = cfg.mainsiteUrl; // will use in eval
+      const content = eval('`' + mtd.content + '`');
+      const statusCode = await this.sendMessage(tgId, content);
       return statusCode;
     } catch (err) {
       await this.errorsService.log('api.admin/CTgBotService.userWelcome', err);
