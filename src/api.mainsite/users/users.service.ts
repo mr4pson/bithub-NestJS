@@ -844,16 +844,19 @@ export class CUsersService extends CImagableService {
 
         const user = this.buildSafeCreate(payload, tz, null, null);
         await repo.save(user);
-      } else {
-        let changed = false;
 
-        if (tgData.first_name && user.name !== tgData.first_name) {
-          user.name = `${tgData.first_name} ${tgData.last_name || ''}`;
-          changed = true;
-        }
-
-        if (changed) await repo.save(user);
+        return user;
       }
+
+      let changed = false;
+
+      if (tgData.first_name && user.name !== tgData.first_name) {
+        user.name = `${tgData.first_name} ${tgData.last_name || ''}`;
+        changed = true;
+      }
+
+      if (changed) await repo.save(user);
+
       return user;
     } catch (err) {
       await this.errorsService.log('CUsersService.tgFindOrCreate', err);
