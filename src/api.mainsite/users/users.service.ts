@@ -831,7 +831,7 @@ export class CUsersService extends CImagableService {
           tg_id: tgId,
           login: tgData.username ? `tg_${tgData.username}` : `tg_${tgId}`,
           name: tgData.first_name || '',
-          // email: tgData.id.toString(),
+          email: tgData.id.toString(),
           last_name: tgData.last_name || '',
           lang_id: 1,
           tz,
