@@ -194,27 +194,28 @@ export class CUsersService extends CImagableService {
               .getRepository(CUser)
               .findOne({ where: { email: text } });
             if (foundUser) {
+              if (foundUser.tg_id) {
+                await this.tgBotService.sendMessage(
+                  from.id,
+                  'The proposed email has already been linked to a different account. Please enter e-mail again.',
+                );
+
+                return;
+              }
+
               foundUser.tg_id = from.id;
               foundUser.tg_active = true;
+
               await this.dataSource.getRepository(CUser).save(foundUser);
               await this.tgBotService.sendMessage(
                 from.id,
-                'Your Telegram has been linked to your account. Welcome!',
+                'Your Telegram has been linked to your account.',
               );
-              // await this.tgBotService.userWelcome(foundUser);
             }
-            // else {
-            //   await this.tgBotService.sendMessage(
-            //     from.id,
-            //     'Account with this e-mail not found. Please check and try again.',
-            //   );
-            // }
 
             await this.authenticateTgUser(from, text);
 
             delete this.steps[from.id];
-
-            console.log(this.steps);
           } catch (e) {
             await this.errorsService.log(
               'api.admin/CUsersService.onTgEvent.emailBind',
@@ -234,23 +235,6 @@ export class CUsersService extends CImagableService {
       // активация telegram-уведомлений
       if (dto.message?.text?.includes('/start')) {
         delete this.steps[from.id];
-        // const user_uuid = dto.message.text.split(' ')[1];
-
-        // пришло /start без payload, такое бывает при реактивации бота в окне приложения, попробуем найти и реактивировать юзера по telegram id
-
-        // if (user_uuid) {
-        //   // пришло /start c payload
-        //   const user = await this.dataSource
-        //     .getRepository(CUser)
-        //     .findOneBy({ uuid: user_uuid });
-        //   if (!user) return;
-        //   user.tg_id = from.id;
-        //   user.tg_active = true;
-        //   await this.dataSource.getRepository(CUser).save(user);
-        //   await this.tgBotService.userWelcome(user);
-
-        //   return;
-        // }
 
         const user = await this.dataSource
           .getRepository(CUser)
@@ -262,7 +246,7 @@ export class CUsersService extends CImagableService {
 
           await this.tgBotService.sendMessage(
             from.id,
-            'To link your Telegram to an existing account, please reply with your e-mail address.',
+            'Please reply with your e-mail address to link your Telegram to either an existing account or to a new one.',
           );
 
           return;
