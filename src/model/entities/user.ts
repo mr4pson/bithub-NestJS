@@ -31,7 +31,7 @@ export class CUser extends CEntity implements IChildable, IImagable {
   @Column({ nullable: true, default: null })
   public referrer_id: number;
 
-  @Column({ nullable: false, unique: true })
+  @Column({ nullable: false, unique: false })
   public email: string;
 
   @Column({ nullable: false, select: false })
