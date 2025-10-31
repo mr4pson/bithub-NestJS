@@ -6,6 +6,7 @@ import {
   Param,
   Req,
   ParseIntPipe,
+  Query,
 } from '@nestjs/common';
 import { IResponse } from 'src/model/dto/response.interface';
 import { CGuidesService } from './guides.service';
@@ -74,6 +75,7 @@ export class CGuidesController {
 
   @Post('one-by-slug/:slug')
   public oneBySlug(
+    @Query('viewed') viewed: string,
     @Param('slug') slug: string,
     @Req() request: Request,
   ): Promise<IResponse<IGuide>> {
@@ -81,7 +83,7 @@ export class CGuidesController {
     const visitor_id = token
       ? (this.jwtService.decode(token)['id'] as number)
       : null;
-    return this.guidesService.oneBySlug(slug, visitor_id);
+    return this.guidesService.oneBySlug(slug, visitor_id, viewed);
   }
 
   // @UseGuards(CUserGuard)

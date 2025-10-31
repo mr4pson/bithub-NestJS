@@ -35,4 +35,5 @@ export interface IGuide {
   isTasksBlocked?: boolean;
   isJustViewed?: boolean;
   isTestPeriodEnded?: boolean;
+  guidesViewedCount?: number;
 }

@@ -362,6 +362,7 @@ export class CGuidesService {
   public async oneBySlug(
     slug: string,
     user_id: number,
+    viewed: string,
   ): Promise<IResponse<IGuide>> {
     try {
       // to sort joined array we need to use QueryBuilder instead of simple repository API!
@@ -411,17 +412,21 @@ export class CGuidesService {
         guide: { id: number; slug: string };
         createdAt: string;
       }[] = null;
-      if (user_id) {
+
+      if (user_id && viewed === 'true') {
         const user = await this.dataSource
           .getRepository(CUser)
           .findOne({ where: { id: user_id } });
+
         if (user && !user.subType && guide.type !== GuideTypes.Gem) {
           const vg = Array.isArray(user.viewedGuides) ? user.viewedGuides : [];
           const exists = vg.some((v) => v?.guide?.id === guide.id);
+
           if (!exists && vg.length < 5) {
             vg.push({
               guide: { id: guide.id, slug: guide.slug },
               createdAt: new Date().toISOString(),
+              // createdAt: '2025-09-28T01:39:07.100Z',
             });
             user.viewedGuides = vg;
             await this.dataSource.getRepository(CUser).save(user);
@@ -688,7 +693,7 @@ export class CGuidesService {
           const diffMs = Date.now() - created.getTime();
           const days = diffMs / (1000 * 60 * 60 * 24);
           if (days > 30) {
-            isBlocked = false;
+            isBlocked = true;
             isTestPeriodEnded = true;
           }
         }
@@ -729,6 +734,9 @@ export class CGuidesService {
       isTasksBlocked: isBlocked,
       isJustViewed,
       isTestPeriodEnded,
+      guidesViewedCount: Array.isArray(viewedGuides)
+        ? viewedGuides.length
+        : undefined,
     };
 
     for (const l of langs) {
