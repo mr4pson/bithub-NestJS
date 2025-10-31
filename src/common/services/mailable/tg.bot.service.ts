@@ -211,11 +211,91 @@ export class CTgBotService extends CMailableService implements OnModuleInit {
     }
   }
 
+  public async userVerifyEmail(tgId: number, langId: number): Promise<number> {
+    try {
+      const mtd = await this.getMailtemplateData(
+        'user-tg-email-verify',
+        langId,
+      );
+      const content = eval('`' + mtd.content + '`');
+      const statusCode = await this.sendMessage(tgId, content);
+      return statusCode;
+    } catch (err) {
+      await this.errorsService.log(
+        'api.admin/CTgBotService.userVerifyEmail',
+        err,
+      );
+      return -1;
+    }
+  }
+
+  public async userEmailAlreadyLinked(
+    tgId: number,
+    langId: number,
+  ): Promise<number> {
+    try {
+      const mtd = await this.getMailtemplateData(
+        'user-tg-email-already-linked',
+        langId,
+      );
+      const content = eval('`' + mtd.content + '`');
+      const statusCode = await this.sendMessage(tgId, content);
+      return statusCode;
+    } catch (err) {
+      await this.errorsService.log(
+        'api.admin/CTgBotService.userEmailAlreadyLinked',
+        err,
+      );
+      return -1;
+    }
+  }
+
+  public async userEmailLinkedSuccessfully(
+    tgId: number,
+    langId: number,
+  ): Promise<number> {
+    try {
+      const mtd = await this.getMailtemplateData(
+        'user-tg-email-linked-successfully',
+        langId,
+      );
+      const content = eval('`' + mtd.content + '`');
+      const statusCode = await this.sendMessage(tgId, content);
+      return statusCode;
+    } catch (err) {
+      await this.errorsService.log(
+        'api.admin/CTgBotService.userEmailLinkedSuccessfully',
+        err,
+      );
+      return -1;
+    }
+  }
+
+  public async userEmailInvalid(tgId: number, langId: number): Promise<number> {
+    try {
+      const mtd = await this.getMailtemplateData(
+        'user-tg-email-invalid',
+        langId,
+      );
+      const content = eval('`' + mtd.content + '`');
+      const statusCode = await this.sendMessage(tgId, content);
+      return statusCode;
+    } catch (err) {
+      await this.errorsService.log(
+        'api.admin/CTgBotService.userEmailInvalid',
+        err,
+      );
+      return -1;
+    }
+  }
   /////////////////
   // utils
   /////////////////
 
-  public async sendMessage(chat_id: number, content: string): Promise<number> {
+  protected async sendMessage(
+    chat_id: number,
+    content: string,
+  ): Promise<number> {
     try {
       const dto = { chat_id, text: content, parse_mode: 'HTML' };
       await this.sendRequest('sendMessage', dto);

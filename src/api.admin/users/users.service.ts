@@ -172,6 +172,7 @@ export class CUsersService extends CImagableService {
   public async onTgEvent(dto: ITgEvent, token: string): Promise<void> {
     try {
       const from = dto.message.from;
+      const langId = await this.getLangId(from.language_code);
       const tgbotWhToken = (
         await this.dataSource
           .getRepository(CSetting)
@@ -195,15 +196,12 @@ export class CUsersService extends CImagableService {
           // ask user to provide email to bind account
           this.steps[from.id] = 'email';
 
-          await this.tgBotService.sendMessage(
-            from.id,
-            'Please reply with your e-mail address to link your Telegram to either an existing account or to a new one.',
-          );
+          await this.tgBotService.userVerifyEmail(from.id, langId);
 
           return;
         }
 
-        await this.authenticateTgUser(from);
+        await this.authenticateTgUser(from, langId);
       }
 
       // handle incoming plain email replies to bind account
@@ -218,10 +216,7 @@ export class CUsersService extends CImagableService {
               .findOne({ where: { email: text } });
             if (foundUser) {
               if (foundUser.tg_id) {
-                await this.tgBotService.sendMessage(
-                  from.id,
-                  'The proposed email has already been linked to a different account. Please enter e-mail again.',
-                );
+                await this.tgBotService.userEmailAlreadyLinked(from.id, langId);
 
                 return;
               }
@@ -230,13 +225,13 @@ export class CUsersService extends CImagableService {
               foundUser.tg_active = true;
 
               await this.dataSource.getRepository(CUser).save(foundUser);
-              await this.tgBotService.sendMessage(
+              await this.tgBotService.userEmailLinkedSuccessfully(
                 from.id,
-                'Your Telegram has been linked to your account.',
+                langId,
               );
             }
 
-            await this.authenticateTgUser(from, text);
+            await this.authenticateTgUser(from, langId, text);
 
             delete this.steps[from.id];
           } catch (e) {
@@ -247,10 +242,7 @@ export class CUsersService extends CImagableService {
           }
           return;
         } else {
-          await this.tgBotService.sendMessage(
-            from.id,
-            'The e-mail address you provided is not valid. Please try again.',
-          );
+          await this.tgBotService.userEmailInvalid(from.id, langId);
           return;
         }
       }
@@ -273,6 +265,7 @@ export class CUsersService extends CImagableService {
 
   private async authenticateTgUser(
     from: ITgFrom,
+    langId: number,
     email?: string,
   ): Promise<void> {
     try {
@@ -299,23 +292,27 @@ export class CUsersService extends CImagableService {
 
       const url = `${cfg.mainsiteUrl}/${from.language_code}/login/${tgId}?expires=${expires}&userData=${userDataParam}&signature=${signature}`;
 
-      let lang = await this.dataSource
-        .getRepository(CLang)
-        .findOne({ where: { slug: from.language_code } });
-
-      if (!lang) {
-        lang = await this.dataSource
-          .getRepository(CLang)
-          .findOneBy({ slug: 'en' });
-      }
-
-      await this.tgBotService.userAuthenticate(tgId, lang.id, url);
+      await this.tgBotService.userAuthenticate(tgId, langId, url);
     } catch (err) {
       await this.errorsService.log(
         'api.admin/CUsersService.authenticateTgUser',
         err,
       );
     }
+  }
+
+  private async getLangId(languageCode: string) {
+    let lang = await this.dataSource
+      .getRepository(CLang)
+      .findOne({ where: { slug: languageCode } });
+
+    if (!lang) {
+      lang = await this.dataSource
+        .getRepository(CLang)
+        .findOneBy({ slug: 'en' });
+    }
+
+    return lang.id;
   }
 
   //////////////////////

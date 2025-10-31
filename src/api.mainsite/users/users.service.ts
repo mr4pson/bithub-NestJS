@@ -98,8 +98,6 @@ export class CUsersService extends CImagableService {
       .update(`${userDataB64}|${expires}`)
       .digest('hex');
 
-    console.log(expected, signature);
-
     if (expected !== signature) {
       return { ok: false, error: 'invalid_signature' } as any;
     }
@@ -108,8 +106,6 @@ export class CUsersService extends CImagableService {
       Buffer.from(userDataB64, 'base64').toString('utf8'),
     );
     const user = await this.tgFindOrCreate(decoded, tz);
-
-    console.log(user.tg_id, id);
 
     if (!user || id !== user.tg_id)
       return { ok: false, error: 'internal_error' } as any;
@@ -316,8 +312,6 @@ export class CUsersService extends CImagableService {
           // created_at: MoreThanOrEqual(expiration),
         },
       });
-
-    console.log(verification, code);
 
     if (!verification) {
       return { statusCode: 401, error: 'code is incorrect' };
