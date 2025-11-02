@@ -776,6 +776,7 @@ export class CUsersService extends CImagableService {
       refEarnings,
       ref_link: user.ref_link,
       tg_username: user.tg_username,
+      viewedGuidesCount: (user.viewedGuides ?? []).length,
       tg_tasks: user.tg_tasks,
       tg_guides: user.tg_guides,
       tg_articles: user.tg_articles,

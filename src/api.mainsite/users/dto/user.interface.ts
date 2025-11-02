@@ -22,6 +22,7 @@ export interface IUser {
   readonly ref_link?: string;
   readonly refEarnings?: number;
   readonly tg_username?: string;
+  readonly viewedGuidesCount?: number;
   readonly tg_tasks: boolean;
   readonly tg_guides: boolean;
   readonly tg_articles: boolean;
