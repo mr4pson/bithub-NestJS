@@ -755,6 +755,7 @@ export class CUsersService extends CImagableService {
       uuid: user.uuid,
       lang_id: user.lang_id,
       parent_id: user.parent_id,
+      parent_email: user.parent?.email,
       referrer_id: user.referrer_id,
       email: user.email,
       name: user.name,

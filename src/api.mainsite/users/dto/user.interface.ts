@@ -3,6 +3,7 @@ export interface IUser {
   readonly uuid: string;
   readonly lang_id: number;
   readonly parent_id: number;
+  readonly parent_email: string;
   readonly referrer_id: number;
   readonly email: string;
   readonly name: string;
