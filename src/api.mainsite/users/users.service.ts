@@ -741,6 +741,7 @@ export class CUsersService extends CImagableService {
       password: dto.password ? this.authService.buildHash(dto.password) : null,
       wallet: dto.wallet,
       tg_id: dto.tg_id,
+      tg_username: dto.tg_username,
       subType: null,
       tg_active: true,
       tz,

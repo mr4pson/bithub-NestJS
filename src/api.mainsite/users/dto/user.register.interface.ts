@@ -6,6 +6,7 @@ export interface IUserRegister {
   readonly password?: string;
   readonly wallet?: string;
   readonly tg_id?: number;
+  readonly tg_username?: string;
   readonly parent_uuid?: string;
   readonly referrer_uuid?: string;
   readonly captchaToken?: string;
