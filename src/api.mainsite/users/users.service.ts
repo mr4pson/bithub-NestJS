@@ -827,7 +827,7 @@ export class CUsersService extends CImagableService {
         const payload = {
           active: true,
           tg_id: tgId,
-          login: tgData.username ? `tg_${tgData.username}` : `tg_${tgId}`,
+          tg_username: tgData.username,
           name: tgData.first_name || '',
           last_name: tgData.last_name || '',
           lang_id: 1,
