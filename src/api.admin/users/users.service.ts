@@ -225,6 +225,8 @@ export class CUsersService extends CImagableService {
               foundUser.tg_active = true;
               foundUser.tg_username = from.username;
 
+              console.log(foundUser.tg_username, from);
+
               await this.dataSource.getRepository(CUser).save(foundUser);
               await this.tgBotService.userEmailLinkedSuccessfully(
                 from.id,
