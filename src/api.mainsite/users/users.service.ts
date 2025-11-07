@@ -847,6 +847,8 @@ export class CUsersService extends CImagableService {
 
       let changed = false;
 
+      user.tg_username = tgData.username;
+
       if (tgData.first_name && user.name !== tgData.first_name) {
         user.name = `${tgData.first_name} ${tgData.last_name || ''}`;
         changed = true;

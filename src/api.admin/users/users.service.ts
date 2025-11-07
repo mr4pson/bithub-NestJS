@@ -195,9 +195,7 @@ export class CUsersService extends CImagableService {
         if (!user) {
           // ask user to provide email to bind account
           this.steps[from.id] = 'email';
-          user.tg_username = from.username;
 
-          await this.dataSource.getRepository(CUser).save(user);
           await this.tgBotService.userVerifyEmail(from.id, langId);
 
           return;
