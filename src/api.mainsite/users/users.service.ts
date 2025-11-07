@@ -845,16 +845,13 @@ export class CUsersService extends CImagableService {
         return user;
       }
 
-      let changed = false;
-
       user.tg_username = tgData.username;
 
       if (tgData.first_name && user.name !== tgData.first_name) {
         user.name = `${tgData.first_name} ${tgData.last_name || ''}`;
-        changed = true;
       }
 
-      if (changed) await repo.save(user);
+      await repo.save(user);
 
       return user;
     } catch (err) {
