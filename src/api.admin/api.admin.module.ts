@@ -31,6 +31,9 @@ import { CShopordersModule } from './shoporders/shoporders.module';
 import { CMailingsModule } from './mailings/mailings.module';
 import { CDropsModule } from './drops/drops.module';
 import { CWithdrawordersModule } from './withdraworders/withdraworders.module';
+import { CStatisticsModule } from './statistics/statistics.module';
+import { CToolcatsModule } from './toolcats/toolcats.module';
+import { CToolsModule } from './tools/tools.module';
 
 @Module({
   imports: [
@@ -44,6 +47,7 @@ import { CWithdrawordersModule } from './withdraworders/withdraworders.module';
     CBackupsModule,
     CMailtemplatesModule,
     CPagesModule,
+    CStatisticsModule,
     CUsersModule,
     CCatsModule,
     CLinktypesModule,
@@ -57,6 +61,8 @@ import { CWithdrawordersModule } from './withdraworders/withdraworders.module';
     CProposalsModule,
     CArtcatsModule,
     CArticlesModule,
+    CToolcatsModule,
+    CToolsModule,
     CAwardsModule,
     CBaxersModule,
     CCommentsModule,

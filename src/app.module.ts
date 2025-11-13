@@ -68,6 +68,12 @@ import { CWordTranslation } from './model/entities/word.translation';
 import { CWordbook } from './model/entities/wordbook';
 import { CSocketModule } from './socket/socket.module';
 import { CWithdraworder } from './model/entities/withdraworder';
+import { CTraffic } from './model/entities/traffic';
+import { CToolcat } from './model/entities/toolcat';
+import { CToolcatTranslation } from './model/entities/toolcat.translation';
+import { CTool } from './model/entities/tool';
+import { CToolTranslation } from './model/entities/tool.translation';
+import { CToolReading } from './model/entities/tool-reading';
 
 @Module({
   imports: [
@@ -123,11 +129,17 @@ import { CWithdraworder } from './model/entities/withdraworder';
         CArtcatTranslation,
         CArticle,
         CArticleTranslation,
+        CToolcat,
+        CToolcatTranslation,
+        CTool,
+        CToolTranslation,
         CReading,
+        CToolReading,
         CAward,
         CAwardTranslation,
         CDailer,
         CBaxer,
+        CTraffic,
         CBaxerTranslation,
         CComment,
         CShopcat,

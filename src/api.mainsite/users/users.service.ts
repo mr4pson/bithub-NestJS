@@ -110,6 +110,15 @@ export class CUsersService extends CImagableService {
     if (!user || id !== user.tg_id)
       return { ok: false, error: 'internal_error' } as any;
 
+    // log tg login event
+    try {
+      await this.dataSource
+        .getRepository('a7_traffic')
+        .insert({ user_id: user.id, type: 'tg_login' });
+    } catch (e) {
+      // ignore logging errors
+    }
+
     const payload = { id: user.id };
     const data: IUserAuthData = {
       id: user.id,

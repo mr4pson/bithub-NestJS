@@ -6,11 +6,11 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { CUser } from './user';
-import { CArticle } from './article';
+import { CTool } from './tool';
 
 // эта сущность хранит факты прочтения статей пользователями
-@Entity({ name: 'a7_readings' })
-export class CReading {
+@Entity({ name: 'a7_tool_readings' })
+export class CToolReading {
   @PrimaryGeneratedColumn()
   public id: number;
 
@@ -18,7 +18,7 @@ export class CReading {
   public user_id: number;
 
   @Column({ nullable: false })
-  public article_id: number;
+  public tool_id: number;
 
   ///////////////
   // relations
@@ -32,11 +32,11 @@ export class CReading {
   @JoinColumn({ name: 'user_id' })
   public user: CUser;
 
-  @ManyToOne((type) => CArticle, {
+  @ManyToOne((type) => CTool, {
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE',
     cascade: false,
   })
   @JoinColumn({ name: 'article_id' })
-  public article: CArticle;
+  public tool: CTool;
 }

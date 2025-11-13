@@ -29,6 +29,8 @@ import { CShopordersModule } from './shoporders/shoporders.module';
 import { CDatemarksModule } from './datemarks/datemarks.module';
 import { CDropsModule } from './drops/drops.module';
 import { CWithdrawordersModule } from './withdraworders/withdraworders.module';
+import { CToolsModule } from './tools/tools.module';
+import { CToolcatsModule } from './toolcats/toolcats.module';
 
 @Module({
   imports: [
@@ -53,6 +55,8 @@ import { CWithdrawordersModule } from './withdraworders/withdraworders.module';
     CProposalsModule,
     CArtcatsModule,
     CArticlesModule,
+    CToolsModule,
+    CToolcatsModule,
     CDailersModule,
     CBaxersModule,
     CCommentsModule,

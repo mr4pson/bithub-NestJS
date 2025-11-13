@@ -115,6 +115,9 @@ export class CUser extends CEntity implements IChildable, IImagable {
   public tg_articles: boolean; // получать новые статьи
 
   @Column({ nullable: false, default: true })
+  public tg_tools: boolean; // получать новые инструменты
+
+  @Column({ nullable: false, default: true })
   public tg_shopitems: boolean; // получать новые товары
 
   @Column({ nullable: false, default: true })
