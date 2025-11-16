@@ -73,7 +73,9 @@ export class CShopordersService {
         user.money -= totalPrice;
         createdOrder.status = 'paid';
 
-        await this.dataSource.getRepository(CShoporder).save(createdOrder);
+        const shopOrder = await this.dataSource
+          .getRepository(CShoporder)
+          .save(createdOrder);
         await this.dataSource.getRepository(CUser).save(user);
         this.socketGateway.broadcast({ event: `user:reload:${user.id}` });
 
@@ -91,6 +93,8 @@ export class CShopordersService {
             referrer_email: referrer.email,
             referee_email: user.email,
             amount: otkat,
+            order_id: shopOrder.id,
+            type: 'shoporder',
           });
 
           await this.dataSource.getRepository(CReforder).save(reforder);
@@ -229,6 +233,8 @@ export class CShopordersService {
             referrer_email: referrer.email,
             referee_email: user.email,
             amount: otkat,
+            order_id: shoporder.id,
+            type: 'outorder',
           });
 
           await this.dataSource.getRepository(CReforder).save(reforder);

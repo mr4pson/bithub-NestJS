@@ -120,7 +120,7 @@ export class CToolsService {
       if (dto.was_read) {
         const reading = this.dataSource
           .getRepository(CToolReading)
-          .create({ user_id, tool_id: dto.tool_id });
+          .create({ user_id, tool_id: dto.tool_id, created_at: new Date() });
         await this.dataSource.getRepository(CReading).save(reading);
       } else {
         await this.dataSource

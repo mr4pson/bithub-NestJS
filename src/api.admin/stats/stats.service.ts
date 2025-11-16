@@ -11,6 +11,7 @@ import { CGuide } from 'src/model/entities/guide';
 import { CInorder } from 'src/model/entities/inorder';
 import { IStatTotals } from './dto/stat.totals.interface';
 import { CTask } from 'src/model/entities/task';
+import { COutorder } from 'src/model/entities/outorder';
 
 @Injectable()
 export class CStatsService {
@@ -219,6 +220,689 @@ export class CStatsService {
     } catch (err) {
       const error = await this.errorsService.log(
         'api.owner/CStatsService.totals',
+        err,
+      );
+      return { statusCode: 500, error };
+    }
+  }
+
+  public async mauByMonths({
+    from,
+    to,
+  }: {
+    from: string;
+    to: string;
+  }): Promise<IResponse<any>> {
+    try {
+      const fromDate = new Date(Number(from));
+      const toDate = new Date(Number(to));
+      const fmt = (d: Date) =>
+        `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(
+          2,
+          '0',
+        )}-${String(d.getDate()).padStart(2, '0')} ${String(
+          d.getHours(),
+        ).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(
+          d.getSeconds(),
+        ).padStart(2, '0')}`;
+
+      const startYear = fromDate.getFullYear();
+      const startMonth = fromDate.getMonth();
+      const endYear = toDate.getFullYear();
+      const endMonth = toDate.getMonth();
+
+      const months: { year: number; month: number; value: number }[] = [];
+
+      let y = startYear;
+      let m = startMonth;
+      while (y < endYear || (y === endYear && m <= endMonth)) {
+        const daysInMonth = this.appService.daysInMonth(m, y);
+        const monthStart = new Date(y, m, 1, 0, 0, 0, 0);
+        const monthEnd = new Date(y, m, daysInMonth, 23, 59, 59, 999);
+
+        const monthFrom = monthStart < fromDate ? fromDate : monthStart;
+        const monthTo = monthEnd > toDate ? toDate : monthEnd;
+
+        const startStr = fmt(monthFrom);
+        const endStr = fmt(monthTo);
+
+        const q = `
+          SELECT COUNT(DISTINCT user_id) AS mau FROM (
+            SELECT user_id FROM a7_traffic WHERE user_id IS NOT NULL AND created_at >= ? AND created_at <= ?
+            UNION ALL
+            SELECT user_id FROM a7_viewings WHERE created_at >= ? AND created_at <= ?
+            UNION ALL
+            SELECT user_id FROM a7_readings WHERE created_at >= ? AND created_at <= ?
+          ) t
+        `;
+
+        let res: any[] = [];
+        try {
+          res = await this.dataSource.query(q, [
+            startStr,
+            endStr,
+            startStr,
+            endStr,
+            startStr,
+            endStr,
+          ]);
+        } catch (e) {
+          // on query error push zero for this month and continue
+          months.push({ year: y, month: m + 1, value: 0 });
+          // advance month
+          m++;
+          if (m > 11) {
+            m = 0;
+            y++;
+          }
+          continue;
+        }
+
+        const mau = Number(res[0]?.mau || 0);
+        months.push({ year: y, month: m + 1, value: mau });
+
+        // advance month
+        m++;
+        if (m > 11) {
+          m = 0;
+          y++;
+        }
+      }
+
+      return { statusCode: 200, data: { months } };
+    } catch (err) {
+      const error = await this.errorsService.log(
+        'api.owner/CStatsService.mauByMonths',
+        err,
+      );
+      return { statusCode: 500, error };
+    }
+  }
+
+  public async subscribersByMonths({
+    from,
+    to,
+  }: {
+    from: string;
+    to: string;
+  }): Promise<IResponse<any>> {
+    try {
+      const fromDate = new Date(Number(from));
+      const toDate = new Date(Number(to));
+      const fmt = (d: Date) =>
+        `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(
+          2,
+          '0',
+        )}-${String(d.getDate()).padStart(2, '0')} ${String(
+          d.getHours(),
+        ).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(
+          d.getSeconds(),
+        ).padStart(2, '0')}`;
+
+      const startYear = fromDate.getFullYear();
+      const startMonth = fromDate.getMonth();
+      const endYear = toDate.getFullYear();
+      const endMonth = toDate.getMonth();
+
+      const months: { year: number; month: number; value: number }[] = [];
+
+      let y = startYear;
+      let m = startMonth;
+      while (y < endYear || (y === endYear && m <= endMonth)) {
+        const daysInMonth = this.appService.daysInMonth(m, y);
+        const monthStart = new Date(y, m, 1, 0, 0, 0, 0);
+        const monthEnd = new Date(y, m, daysInMonth, 23, 59, 59, 999);
+
+        const monthFrom = monthStart < fromDate ? fromDate : monthStart;
+        const monthTo = monthEnd > toDate ? toDate : monthEnd;
+
+        const dateFilterMonth = `outorders.created_at >= '${fmt(
+          monthFrom,
+        )}' AND outorders.created_at <= '${fmt(monthTo)}'`;
+
+        let cnt = 0;
+        try {
+          cnt = await this.dataSource
+            .getRepository(COutorder)
+            .createQueryBuilder('outorders')
+            .where(`${dateFilterMonth} AND outorders.subType IS NOT NULL`)
+            .getCount();
+        } catch (e) {
+          // on error push zero and continue
+          months.push({ year: y, month: m + 1, value: 0 });
+          m++;
+          if (m > 11) {
+            m = 0;
+            y++;
+          }
+          continue;
+        }
+
+        months.push({ year: y, month: m + 1, value: cnt });
+
+        // advance month
+        m++;
+        if (m > 11) {
+          m = 0;
+          y++;
+        }
+      }
+
+      return { statusCode: 200, data: { months } };
+    } catch (err) {
+      const error = await this.errorsService.log(
+        'api.owner/CStatsService.subscribersByMonths',
+        err,
+      );
+      return { statusCode: 500, error };
+    }
+  }
+
+  public async outordersAvgAmountByMonths({
+    from,
+    to,
+  }: {
+    from: string;
+    to: string;
+  }): Promise<IResponse<any>> {
+    try {
+      const fromDate = new Date(Number(from));
+      const toDate = new Date(Number(to));
+      const fmt = (d: Date) =>
+        `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(
+          2,
+          '0',
+        )}-${String(d.getDate()).padStart(2, '0')} ${String(
+          d.getHours(),
+        ).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(
+          d.getSeconds(),
+        ).padStart(2, '0')}`;
+
+      const startYear = fromDate.getFullYear();
+      const startMonth = fromDate.getMonth();
+      const endYear = toDate.getFullYear();
+      const endMonth = toDate.getMonth();
+
+      const months: { year: number; month: number; value: number }[] = [];
+
+      let y = startYear;
+      let m = startMonth;
+      while (y < endYear || (y === endYear && m <= endMonth)) {
+        const daysInMonth = this.appService.daysInMonth(m, y);
+        const monthStart = new Date(y, m, 1, 0, 0, 0, 0);
+        const monthEnd = new Date(y, m, daysInMonth, 23, 59, 59, 999);
+
+        const monthFrom = monthStart < fromDate ? fromDate : monthStart;
+        const monthTo = monthEnd > toDate ? toDate : monthEnd;
+
+        const startStr = fmt(monthFrom);
+        const endStr = fmt(monthTo);
+
+        let avg = 0;
+        try {
+          const res: any[] = await this.dataSource.query(
+            `SELECT AVG(amount) AS avg FROM a7_outorders WHERE subType IS NOT NULL AND created_at >= ? AND created_at <= ?`,
+            [startStr, endStr],
+          );
+          avg = Number(res[0]?.avg || 0);
+        } catch (e) {
+          months.push({ year: y, month: m + 1, value: 0 });
+          m++;
+          if (m > 11) {
+            m = 0;
+            y++;
+          }
+          continue;
+        }
+
+        months.push({ year: y, month: m + 1, value: avg });
+
+        // advance month
+        m++;
+        if (m > 11) {
+          m = 0;
+          y++;
+        }
+      }
+
+      return { statusCode: 200, data: { months } };
+    } catch (err) {
+      const error = await this.errorsService.log(
+        'api.owner/CStatsService.outordersAvgAmountByMonths',
+        err,
+      );
+      return { statusCode: 500, error };
+    }
+  }
+
+  public async outordersProfitByMonths({
+    from,
+    to,
+  }: {
+    from: string;
+    to: string;
+  }): Promise<IResponse<any>> {
+    try {
+      const fromDate = new Date(Number(from));
+      const toDate = new Date(Number(to));
+      const fmt = (d: Date) =>
+        `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(
+          2,
+          '0',
+        )}-${String(d.getDate()).padStart(2, '0')} ${String(
+          d.getHours(),
+        ).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(
+          d.getSeconds(),
+        ).padStart(2, '0')}`;
+
+      const startYear = fromDate.getFullYear();
+      const startMonth = fromDate.getMonth();
+      const endYear = toDate.getFullYear();
+      const endMonth = toDate.getMonth();
+
+      const months: { year: number; month: number; value: number }[] = [];
+
+      let y = startYear;
+      let m = startMonth;
+      while (y < endYear || (y === endYear && m <= endMonth)) {
+        const daysInMonth = this.appService.daysInMonth(m, y);
+        const monthStart = new Date(y, m, 1, 0, 0, 0, 0);
+        const monthEnd = new Date(y, m, daysInMonth, 23, 59, 59, 999);
+
+        const monthFrom = monthStart < fromDate ? fromDate : monthStart;
+        const monthTo = monthEnd > toDate ? toDate : monthEnd;
+
+        const startStr = fmt(monthFrom);
+        const endStr = fmt(monthTo);
+
+        try {
+          const revRes: any[] = await this.dataSource.query(
+            `SELECT SUM(amount) AS total FROM a7_outorders WHERE subType IS NOT NULL AND created_at >= ? AND created_at <= ?`,
+            [startStr, endStr],
+          );
+          const refRes: any[] = await this.dataSource.query(
+            `SELECT SUM(amount) AS total FROM a7_reforders WHERE created_at >= ? AND created_at <= ?`,
+            [startStr, endStr],
+          );
+
+          const revenue = Number(revRes[0]?.total || 0);
+          const refPayouts = Number(refRes[0]?.total || 0);
+          const profit = Number((revenue - refPayouts).toFixed(2));
+
+          months.push({ year: y, month: m + 1, value: profit });
+        } catch (e) {
+          // on error push zero and continue
+          months.push({ year: y, month: m + 1, value: 0 });
+          m++;
+          if (m > 11) {
+            m = 0;
+            y++;
+          }
+          continue;
+        }
+
+        // advance month
+        m++;
+        if (m > 11) {
+          m = 0;
+          y++;
+        }
+      }
+
+      return { statusCode: 200, data: { months } };
+    } catch (err) {
+      const error = await this.errorsService.log(
+        'api.owner/CStatsService.outordersProfitByMonths',
+        err,
+      );
+      return { statusCode: 500, error };
+    }
+  }
+
+  public async shopordersBuyersByMonths({
+    from,
+    to,
+  }: {
+    from: string;
+    to: string;
+  }): Promise<IResponse<any>> {
+    try {
+      const fromDate = new Date(Number(from));
+      const toDate = new Date(Number(to));
+      const fmt = (d: Date) =>
+        `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(
+          2,
+          '0',
+        )}-${String(d.getDate()).padStart(2, '0')} ${String(
+          d.getHours(),
+        ).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(
+          d.getSeconds(),
+        ).padStart(2, '0')}`;
+
+      const startYear = fromDate.getFullYear();
+      const startMonth = fromDate.getMonth();
+      const endYear = toDate.getFullYear();
+      const endMonth = toDate.getMonth();
+
+      const months: { year: number; month: number; value: number }[] = [];
+
+      let y = startYear;
+      let m = startMonth;
+      while (y < endYear || (y === endYear && m <= endMonth)) {
+        const daysInMonth = this.appService.daysInMonth(m, y);
+        const monthStart = new Date(y, m, 1, 0, 0, 0, 0);
+        const monthEnd = new Date(y, m, daysInMonth, 23, 59, 59, 999);
+
+        const monthFrom = monthStart < fromDate ? fromDate : monthStart;
+        const monthTo = monthEnd > toDate ? toDate : monthEnd;
+
+        const startStr = fmt(monthFrom);
+        const endStr = fmt(monthTo);
+
+        try {
+          const res: any[] = await this.dataSource.query(
+            `SELECT COUNT(DISTINCT email) AS cnt FROM a7_shoporders WHERE created_at >= ? AND created_at <= ? AND (status = 'paid' OR status = 'completed')`,
+            [startStr, endStr],
+          );
+
+          const cnt = Number(res[0]?.cnt || 0);
+          months.push({ year: y, month: m + 1, value: cnt });
+        } catch (e) {
+          months.push({ year: y, month: m + 1, value: 0 });
+          m++;
+          if (m > 11) {
+            m = 0;
+            y++;
+          }
+          continue;
+        }
+
+        // advance month
+        m++;
+        if (m > 11) {
+          m = 0;
+          y++;
+        }
+      }
+
+      return { statusCode: 200, data: { months } };
+    } catch (err) {
+      const error = await this.errorsService.log(
+        'api.owner/CStatsService.shopordersBuyersByMonths',
+        err,
+      );
+      return { statusCode: 500, error };
+    }
+  }
+
+  public async shopordersAvgOrderPriceByMonths({
+    from,
+    to,
+  }: {
+    from: string;
+    to: string;
+  }): Promise<IResponse<any>> {
+    try {
+      const fromDate = new Date(Number(from));
+      const toDate = new Date(Number(to));
+      const fmt = (d: Date) =>
+        `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(
+          2,
+          '0',
+        )}-${String(d.getDate()).padStart(2, '0')} ${String(
+          d.getHours(),
+        ).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(
+          d.getSeconds(),
+        ).padStart(2, '0')}`;
+
+      const startYear = fromDate.getFullYear();
+      const startMonth = fromDate.getMonth();
+      const endYear = toDate.getFullYear();
+      const endMonth = toDate.getMonth();
+
+      const months: { year: number; month: number; value: number }[] = [];
+
+      let y = startYear;
+      let m = startMonth;
+      while (y < endYear || (y === endYear && m <= endMonth)) {
+        const daysInMonth = this.appService.daysInMonth(m, y);
+        const monthStart = new Date(y, m, 1, 0, 0, 0, 0);
+        const monthEnd = new Date(y, m, daysInMonth, 23, 59, 59, 999);
+
+        const monthFrom = monthStart < fromDate ? fromDate : monthStart;
+        const monthTo = monthEnd > toDate ? toDate : monthEnd;
+
+        const startStr = fmt(monthFrom);
+        const endStr = fmt(monthTo);
+
+        try {
+          const res: any[] = await this.dataSource.query(
+            `
+            SELECT AVG(order_total) AS avg FROM (
+              SELECT o.id, SUM(oi.qty * si.price) AS order_total
+              FROM a7_shoporders o
+              JOIN a7_shoporder_items oi ON oi.shoporder_id = o.id
+              JOIN a7_shopitems si ON si.id = oi.shopitem_id
+              WHERE o.created_at >= ? AND o.created_at <= ? AND (o.status = 'paid' OR o.status = 'completed')
+              GROUP BY o.id
+            ) t
+          `,
+            [startStr, endStr],
+          );
+
+          const avg = Number(res[0]?.avg || 0);
+          months.push({ year: y, month: m + 1, value: avg });
+        } catch (e) {
+          months.push({ year: y, month: m + 1, value: 0 });
+          m++;
+          if (m > 11) {
+            m = 0;
+            y++;
+          }
+          continue;
+        }
+
+        // advance month
+        m++;
+        if (m > 11) {
+          m = 0;
+          y++;
+        }
+      }
+
+      return { statusCode: 200, data: { months } };
+    } catch (err) {
+      const error = await this.errorsService.log(
+        'api.owner/CStatsService.shopordersAvgOrderPriceByMonths',
+        err,
+      );
+      return { statusCode: 500, error };
+    }
+  }
+
+  public async shopordersRevenueByMonths({
+    from,
+    to,
+  }: {
+    from: string;
+    to: string;
+  }): Promise<IResponse<any>> {
+    try {
+      const fromDate = new Date(Number(from));
+      const toDate = new Date(Number(to));
+      const fmt = (d: Date) =>
+        `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(
+          2,
+          '0',
+        )}-${String(d.getDate()).padStart(2, '0')} ${String(
+          d.getHours(),
+        ).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(
+          d.getSeconds(),
+        ).padStart(2, '0')}`;
+
+      const startYear = fromDate.getFullYear();
+      const startMonth = fromDate.getMonth();
+      const endYear = toDate.getFullYear();
+      const endMonth = toDate.getMonth();
+
+      const months: { year: number; month: number; value: number }[] = [];
+
+      let y = startYear;
+      let m = startMonth;
+      while (y < endYear || (y === endYear && m <= endMonth)) {
+        const daysInMonth = this.appService.daysInMonth(m, y);
+        const monthStart = new Date(y, m, 1, 0, 0, 0, 0);
+        const monthEnd = new Date(y, m, daysInMonth, 23, 59, 59, 999);
+
+        const monthFrom = monthStart < fromDate ? fromDate : monthStart;
+        const monthTo = monthEnd > toDate ? toDate : monthEnd;
+
+        const startStr = fmt(monthFrom);
+        const endStr = fmt(monthTo);
+
+        try {
+          const res: any[] = await this.dataSource.query(
+            `
+            SELECT SUM(order_total) AS total FROM (
+              SELECT o.id, SUM(oi.qty * si.price) AS order_total
+              FROM a7_shoporders o
+              JOIN a7_shoporder_items oi ON oi.shoporder_id = o.id
+              JOIN a7_shopitems si ON si.id = oi.shopitem_id
+              WHERE o.created_at >= ? AND o.created_at <= ? AND (o.status = 'paid' OR o.status = 'completed')
+              GROUP BY o.id
+            ) t
+          `,
+            [startStr, endStr],
+          );
+
+          const total = Number(res[0]?.total || 0);
+          months.push({
+            year: y,
+            month: m + 1,
+            value: Number(total.toFixed(2)),
+          });
+        } catch (e) {
+          months.push({ year: y, month: m + 1, value: 0 });
+          m++;
+          if (m > 11) {
+            m = 0;
+            y++;
+          }
+          continue;
+        }
+
+        // advance month
+        m++;
+        if (m > 11) {
+          m = 0;
+          y++;
+        }
+      }
+
+      return { statusCode: 200, data: { months } };
+    } catch (err) {
+      const error = await this.errorsService.log(
+        'api.owner/CStatsService.shopordersRevenueByMonths',
+        err,
+      );
+      return { statusCode: 500, error };
+    }
+  }
+
+  public async shopordersProfitByMonths({
+    from,
+    to,
+  }: {
+    from: string;
+    to: string;
+  }): Promise<IResponse<any>> {
+    try {
+      const fromDate = new Date(Number(from));
+      const toDate = new Date(Number(to));
+      const fmt = (d: Date) =>
+        `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(
+          2,
+          '0',
+        )}-${String(d.getDate()).padStart(2, '0')} ${String(
+          d.getHours(),
+        ).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(
+          d.getSeconds(),
+        ).padStart(2, '0')}`;
+
+      const startYear = fromDate.getFullYear();
+      const startMonth = fromDate.getMonth();
+      const endYear = toDate.getFullYear();
+      const endMonth = toDate.getMonth();
+
+      const months: { year: number; month: number; value: number }[] = [];
+
+      let y = startYear;
+      let m = startMonth;
+      while (y < endYear || (y === endYear && m <= endMonth)) {
+        const daysInMonth = this.appService.daysInMonth(m, y);
+        const monthStart = new Date(y, m, 1, 0, 0, 0, 0);
+        const monthEnd = new Date(y, m, daysInMonth, 23, 59, 59, 999);
+
+        const monthFrom = monthStart < fromDate ? fromDate : monthStart;
+        const monthTo = monthEnd > toDate ? toDate : monthEnd;
+
+        const startStr = fmt(monthFrom);
+        const endStr = fmt(monthTo);
+
+        try {
+          // revenue from shoporders
+          const revRes: any[] = await this.dataSource.query(
+            `
+            SELECT SUM(order_total) AS total FROM (
+              SELECT o.id, SUM(oi.qty * si.price) AS order_total
+              FROM a7_shoporders o
+              JOIN a7_shoporder_items oi ON oi.shoporder_id = o.id
+              JOIN a7_shopitems si ON si.id = oi.shopitem_id
+              WHERE o.created_at >= ? AND o.created_at <= ? AND (o.status = 'paid' OR o.status = 'completed')
+              GROUP BY o.id
+            ) t
+          `,
+            [startStr, endStr],
+          );
+
+          // referrer payouts related to those shoporders
+          const refRes: any[] = await this.dataSource.query(
+            `
+              SELECT SUM(r.amount) AS total
+              FROM a7_reforders r
+              JOIN a7_shoporders o ON o.email = r.referee_email
+              WHERE r.created_at >= ? AND r.created_at <= ? AND o.created_at >= ? AND o.created_at <= ? AND (o.status = 'paid' OR o.status = 'completed')
+            `,
+            [startStr, endStr, startStr, endStr],
+          );
+
+          const revenue = Number(revRes[0]?.total || 0);
+          const refPayouts = Number(refRes[0]?.total || 0);
+          const profit = Number((revenue - refPayouts).toFixed(2));
+
+          months.push({ year: y, month: m + 1, value: profit });
+        } catch (e) {
+          months.push({ year: y, month: m + 1, value: 0 });
+          m++;
+          if (m > 11) {
+            m = 0;
+            y++;
+          }
+          continue;
+        }
+
+        // advance month
+        m++;
+        if (m > 11) {
+          m = 0;
+          y++;
+        }
+      }
+
+      return { statusCode: 200, data: { months } };
+    } catch (err) {
+      const error = await this.errorsService.log(
+        'api.owner/CStatsService.shopordersProfitByMonths',
         err,
       );
       return { statusCode: 500, error };

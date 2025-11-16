@@ -1,6 +1,7 @@
 import {
   Column,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
@@ -19,6 +20,10 @@ export class CToolReading {
 
   @Column({ nullable: false })
   public tool_id: number;
+
+  @Index()
+  @Column({ type: 'timestamp', nullable: true, default: null })
+  public created_at: Date;
 
   ///////////////
   // relations

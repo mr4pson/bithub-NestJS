@@ -147,7 +147,7 @@ export class CTasksService {
           newViewings.push(
             this.dataSource
               .getRepository(CViewing)
-              .create({ user_id, task_id: task.id }),
+              .create({ user_id, task_id: task.id, created_at: new Date() }),
           );
         }
       }
@@ -225,7 +225,7 @@ export class CTasksService {
       // записываем факт просмотра
       let viewing = await this.dataSource
         .getRepository(CViewing)
-        .findOneBy({ user_id, task_id: task.id });
+        .findOneBy({ user_id, task_id: task.id, created_at: new Date() });
 
       if (!viewing) {
         viewing = this.dataSource

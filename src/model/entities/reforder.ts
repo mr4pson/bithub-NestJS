@@ -12,6 +12,14 @@ export class CReforder extends CEntity {
   public referee_email: string;
 
   @Index()
+  @Column({ nullable: true, default: null })
+  public type: 'inorder' | 'shoporder' | 'outorder';
+
+  @Index()
+  @Column({ nullable: true, default: null })
+  public order_id: number;
+
+  @Index()
   @Column({
     nullable: false,
     default: 0,

@@ -122,6 +122,8 @@ export class COutordersService {
           referrer_email: referrer.email,
           referee_email: user.email,
           amount: otkat,
+          order_id: referrer.id,
+          type: 'outorder',
         });
         await this.dataSource.getRepository(CReforder).save(reforder);
         this.socketGateway.broadcast({ event: `user:reload:${referrer.id}` });
@@ -355,6 +357,8 @@ export class COutordersService {
             referrer_email: referrer.email,
             referee_email: user.email,
             amount: otkat,
+            order_id: outorder.id,
+            type: 'shoporder',
           });
           await this.dataSource.getRepository(CReforder).save(reforder);
           this.socketGateway.broadcast({ event: `user:reload:${referrer.id}` });

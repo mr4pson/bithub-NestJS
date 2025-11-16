@@ -120,9 +120,11 @@ export class CArticlesService {
   ): Promise<IResponse<void>> {
     try {
       if (dto.was_read) {
-        const reading = this.dataSource
-          .getRepository(CReading)
-          .create({ user_id, article_id: dto.article_id });
+        const reading = this.dataSource.getRepository(CReading).create({
+          user_id,
+          article_id: dto.article_id,
+          created_at: new Date(),
+        });
         await this.dataSource.getRepository(CReading).save(reading);
       } else {
         await this.dataSource

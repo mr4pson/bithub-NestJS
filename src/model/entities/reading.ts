@@ -1,6 +1,7 @@
 import {
   Column,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
@@ -19,6 +20,11 @@ export class CReading {
 
   @Column({ nullable: false })
   public article_id: number;
+
+  // store created_at but do NOT set default CURRENT_TIMESTAMP — keep nullable and default null
+  @Index()
+  @Column({ type: 'timestamp', nullable: true, default: null })
+  public created_at: Date;
 
   ///////////////
   // relations

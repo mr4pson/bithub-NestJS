@@ -122,6 +122,8 @@ export class CInordersService {
             referrer_email: referrer.email,
             referee_email: user.email,
             amount: otkat,
+            order_id: inorder.id,
+            type: 'inorder',
           });
           await this.dataSource.getRepository(CReforder).save(reforder);
           this.socketGateway.broadcast({ event: `user:reload:${referrer.id}` });
