@@ -141,8 +141,8 @@ export class COutordersService {
 
         if (
           user.paid_until.getTime() >= now.getTime() &&
-          currentUserSubType !== 'dg-team' &&
-          user.subType === 'dg-team'
+          currentUserSubType !== 'dg-pro' &&
+          user.subType === 'dg-pro'
         )
           user.children_limit += 15;
 
@@ -312,8 +312,8 @@ export class COutordersService {
 
           if (
             user.paid_until.getTime() >= now.getTime() &&
-            currentUserSubType !== 'dg-team' &&
-            user.subType === 'dg-team'
+            currentUserSubType !== 'dg-pro' &&
+            user.subType === 'dg-pro'
           )
             user.children_limit += 15;
 

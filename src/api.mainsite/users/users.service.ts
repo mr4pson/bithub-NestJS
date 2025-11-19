@@ -760,6 +760,7 @@ export class CUsersService extends CImagableService {
   }
 
   private buildUser(user: CUser, refEarnings?: number): IUser {
+    const subType = user.parent_id ? user.parent.subType : user.subType;
     return {
       id: user.id,
       uuid: user.uuid,
@@ -773,7 +774,7 @@ export class CUsersService extends CImagableService {
       img: user.img,
       money: user.money,
       points: user.points,
-      subType: user.parent_id ? user.parent.subType : user.subType,
+      subType: subType === 'dg-team' ? 'dg-pro' : subType,
       paid_at: user.parent_id ? user.parent.paid_at : user.paid_at,
       paid_until: user.parent_id ? user.parent.paid_until : user.paid_until,
       freetasks: user.parent_id ? user.parent?.freetasks : user.freetasks,

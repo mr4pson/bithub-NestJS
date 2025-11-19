@@ -344,6 +344,10 @@ export class CUsersService extends CImagableService {
       filter += ` AND LOWER(users.name) LIKE LOWER('%${dtoFilter.name}%')`;
     }
 
+    if (dtoFilter.tg_username) {
+      filter += ` AND LOWER(users.tg_username) LIKE LOWER('%${dtoFilter.tg_username}%')`;
+    }
+
     if (dtoFilter.search) {
       filter += ` AND (LOWER(users.name) LIKE LOWER('%${dtoFilter.search}%') OR LOWER(users.email) LIKE LOWER('%${dtoFilter.search}%') OR users.id='${dtoFilter.search}')`;
     }

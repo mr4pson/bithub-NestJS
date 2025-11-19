@@ -322,8 +322,16 @@ export class CGuidesService {
       if (user_id) {
         const user = await this.dataSource
           .getRepository(CUser)
-          .findOne({ where: { id: user_id } });
-        if (user && !user.subType && guide.type !== GuideTypes.Gem) {
+          .createQueryBuilder('user')
+          .leftJoinAndSelect('user.parent', 'parent')
+          .loadRelationCountAndMap('user.children_q', 'user.children')
+          .where(`user.id='${user_id}' AND user.active='1'`)
+          .getOne();
+        if (
+          user &&
+          !(user.subType || user.parent.subType) &&
+          guide.type !== GuideTypes.Gem
+        ) {
           const vg = Array.isArray(user.viewedGuides) ? user.viewedGuides : [];
           const exists = vg.some((v) => v?.guide?.id === guide.id);
           if (!exists && vg.length < 5) {
@@ -416,9 +424,17 @@ export class CGuidesService {
       if (user_id && viewed === 'true') {
         const user = await this.dataSource
           .getRepository(CUser)
-          .findOne({ where: { id: user_id } });
+          .createQueryBuilder('user')
+          .leftJoinAndSelect('user.parent', 'parent')
+          .loadRelationCountAndMap('user.children_q', 'user.children')
+          .where(`user.id='${user_id}' AND user.active='1'`)
+          .getOne();
 
-        if (user && !user.subType && guide.type !== GuideTypes.Gem) {
+        if (
+          user &&
+          !(user.subType || user.parent.subType) &&
+          guide.type !== GuideTypes.Gem
+        ) {
           const vg = Array.isArray(user.viewedGuides) ? user.viewedGuides : [];
           const exists = vg.some((v) => v?.guide?.id === guide.id);
 
