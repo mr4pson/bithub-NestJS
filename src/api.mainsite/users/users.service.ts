@@ -81,12 +81,13 @@ export class CUsersService extends CImagableService {
     signature: string,
     tz: number,
   ): Promise<IResponse<IUserAuthData>> {
-    console.log('userData', userData, expires, signature);
     if (!expires || !userData || !signature) {
       return { ok: false, error: 'invalid_request' } as any;
     }
 
     const now = Math.floor(Date.now() / 1000);
+
+    console.log('expires', expires);
 
     if (parseInt(expires, 10) < now) {
       return { ok: false, error: 'expired' } as any;
@@ -98,6 +99,8 @@ export class CUsersService extends CImagableService {
       .createHmac('sha256', cfg.encryption.key)
       .update(`${userDataB64}|${expires}`)
       .digest('hex');
+
+    console.log(expected, signature, expected !== signature);
 
     if (expected !== signature) {
       return { ok: false, error: 'invalid_signature' } as any;
