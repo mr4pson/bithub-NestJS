@@ -107,7 +107,7 @@ export class CUsersService extends CImagableService {
     );
     const user = await this.tgFindOrCreate(decoded, tz);
 
-    if (!user || id !== user.tg_id)
+    if (!user || id !== user?.tg_id)
       return { ok: false, error: 'internal_error' } as any;
 
     // log tg login event
@@ -833,6 +833,8 @@ export class CUsersService extends CImagableService {
 
       const repo = this.dataSource.getRepository(CUser);
       const user = await repo.findOne({ where: { tg_id: tgId } });
+
+      console.log('debug', user, tgId);
 
       if (!user) {
         const payload = {
