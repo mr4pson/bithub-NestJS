@@ -192,6 +192,8 @@ export class CUsersService extends CImagableService {
           .getRepository(CUser)
           .findOneBy({ tg_id: from.id });
 
+        console.log(user, from);
+
         if (!user) {
           // ask user to provide email to bind account
           this.steps[from.id] = 'email';
