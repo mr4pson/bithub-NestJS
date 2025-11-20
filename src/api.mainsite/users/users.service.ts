@@ -98,11 +98,7 @@ export class CUsersService extends CImagableService {
       .update(`${userDataB64}|${expires}`)
       .digest('hex');
 
-    const decoded1 = JSON.parse(
-      Buffer.from(userDataB64, 'base64').toString('utf8'),
-    );
-
-    console.log(decoded1, expected, signature, expected !== signature);
+    console.log(userDataB64, expected, signature, expected !== signature);
 
     if (expected !== signature) {
       return { ok: false, error: 'invalid_signature' } as any;

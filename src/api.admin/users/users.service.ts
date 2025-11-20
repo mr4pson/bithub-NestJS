@@ -271,9 +271,10 @@ export class CUsersService extends CImagableService {
   ): Promise<void> {
     try {
       const tgId = from.id;
+      const cleanedFirstName = from.first_name.replace(/[^\p{L}]/gu, '');
       const userDataJson = {
         id: from.id,
-        first_name: from.first_name || null,
+        first_name: cleanedFirstName || null,
         is_bot: from.is_bot || null,
         email: email,
         username: from.username || null,
