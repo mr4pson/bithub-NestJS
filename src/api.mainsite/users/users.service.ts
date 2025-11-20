@@ -81,6 +81,7 @@ export class CUsersService extends CImagableService {
     signature: string,
     tz: number,
   ): Promise<IResponse<IUserAuthData>> {
+    console.log('userData', userData, expires, signature);
     if (!expires || !userData || !signature) {
       return { ok: false, error: 'invalid_request' } as any;
     }
