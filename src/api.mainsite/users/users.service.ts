@@ -87,8 +87,6 @@ export class CUsersService extends CImagableService {
 
     const now = Math.floor(Date.now() / 1000);
 
-    console.log('expires', expires);
-
     if (parseInt(expires, 10) < now) {
       return { ok: false, error: 'expired' } as any;
     }
@@ -100,7 +98,7 @@ export class CUsersService extends CImagableService {
       .update(`${userDataB64}|${expires}`)
       .digest('hex');
 
-    console.log(expected, signature, expected !== signature);
+    console.log(userData, expected, signature, expected !== signature);
 
     if (expected !== signature) {
       return { ok: false, error: 'invalid_signature' } as any;
@@ -833,14 +831,10 @@ export class CUsersService extends CImagableService {
     try {
       const tgId = tgData.id;
 
-      console.log('tgData', tgData);
-
       if (!tgId) return null;
 
       const repo = this.dataSource.getRepository(CUser);
       const user = await repo.findOne({ where: { tg_id: tgId } });
-
-      console.log('debug', user, tgId);
 
       if (!user) {
         const payload = {

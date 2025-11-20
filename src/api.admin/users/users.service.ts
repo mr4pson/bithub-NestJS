@@ -192,8 +192,6 @@ export class CUsersService extends CImagableService {
           .getRepository(CUser)
           .findOneBy({ tg_id: from.id });
 
-        console.log(user, from);
-
         if (!user) {
           // ask user to provide email to bind account
           this.steps[from.id] = 'email';
@@ -281,6 +279,8 @@ export class CUsersService extends CImagableService {
         username: from.username || null,
         language_code: from.language_code || null,
       };
+
+      console.log(userDataJson);
       // raw base64 (to be signed), URL-encode only for the query parameter
       const userDataB64 = Buffer.from(JSON.stringify(userDataJson)).toString(
         'base64',

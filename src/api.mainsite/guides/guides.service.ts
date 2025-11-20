@@ -432,7 +432,7 @@ export class CGuidesService {
 
         if (
           user &&
-          !(user?.subType || user?.parent.subType) &&
+          !(user?.subType || user?.parent?.subType) &&
           guide.type !== GuideTypes.Gem
         ) {
           const vg = Array.isArray(user.viewedGuides) ? user.viewedGuides : [];
