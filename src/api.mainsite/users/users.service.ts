@@ -829,6 +829,8 @@ export class CUsersService extends CImagableService {
     try {
       const tgId = tgData.id;
 
+      console.log('tgData', tgData);
+
       if (!tgId) return null;
 
       const repo = this.dataSource.getRepository(CUser);
