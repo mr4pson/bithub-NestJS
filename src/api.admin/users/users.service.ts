@@ -189,7 +189,7 @@ export class CUsersService extends CImagableService {
           user.tg_active = false;
 
           await this.dataSource.getRepository(CUser).save(user);
-          await this.tgBotService.userUnbindSuccess(tg_id, langId);
+          await this.tgBotService.userUnbindSuccess(tg_id, user.lang_id);
           return;
         }
       }
