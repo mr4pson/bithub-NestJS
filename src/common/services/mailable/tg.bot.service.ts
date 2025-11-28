@@ -217,7 +217,12 @@ export class CTgBotService extends CMailableService implements OnModuleInit {
       );
       const mainsiteUrl = cfg.mainsiteUrl; // will use in eval
       const content = eval('`' + mtd.content + '`');
-      const statusCode = await this.sendMessage(tgId, content);
+      const statusCode = await this.sendMessageWithButton(
+        tgId,
+        content,
+        'Отвязать аккаунт',
+        'unbind_account',
+      );
       return statusCode;
     } catch (err) {
       await this.errorsService.log(
@@ -305,6 +310,27 @@ export class CTgBotService extends CMailableService implements OnModuleInit {
       return -1;
     }
   }
+
+  public async userUnbindSuccess(
+    tgId: number,
+    langId: number,
+  ): Promise<number> {
+    try {
+      const mtd = await this.getMailtemplateData(
+        'user-tg-unbind-success',
+        langId,
+      );
+      const content = eval('`' + mtd.content + '`');
+      const statusCode = await this.sendMessage(tgId, content);
+      return statusCode;
+    } catch (err) {
+      await this.errorsService.log(
+        'api.admin/CTgBotService.userUnbindSuccess',
+        err,
+      );
+      return -1;
+    }
+  }
   /////////////////
   // utils
   /////////////////
@@ -315,6 +341,31 @@ export class CTgBotService extends CMailableService implements OnModuleInit {
   ): Promise<number> {
     try {
       const dto = { chat_id, text: content, parse_mode: 'HTML' };
+      await this.sendRequest('sendMessage', dto);
+      return 200;
+    } catch (err) {
+      console.log(err);
+      return err.error_code || 500;
+    }
+  }
+
+  protected async sendMessageWithButton(
+    chat_id: number,
+    content: string,
+    buttonText: string,
+    buttonCallbackData: string,
+  ): Promise<number> {
+    try {
+      const dto = {
+        chat_id,
+        text: content,
+        parse_mode: 'HTML',
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: buttonText, callback_data: buttonCallbackData }],
+          ],
+        },
+      };
       await this.sendRequest('sendMessage', dto);
       return 200;
     } catch (err) {

@@ -22,6 +22,8 @@ export interface IUser {
   readonly referral_buy_percent: number;
   readonly ref_link?: string;
   readonly refEarnings?: number;
+  readonly refViewCount: number; // количество переходов по реферальной ссылке
+  readonly refRegCount: number; // количество зарегистрированных пользователей по реф ссылке
   readonly tg_username?: string;
   readonly viewedGuidesCount?: number;
   readonly tg_tasks: boolean;

@@ -192,6 +192,33 @@ export class CUsersController {
     return this.usersService.getTgInvite(visitor_id);
   }
 
+  @Post('track-referral-view/:parent_uuid')
+  public trackReferralView(
+    @Param('parent_uuid') parent_uuid: string,
+  ): Promise<IResponse<void>> {
+    return this.usersService.trackReferralView(parent_uuid);
+  }
+
+  @UseGuards(CUserGuard)
+  @Post('referrals-purchase-count')
+  public getReferralsPurchaseCount(
+    @Req() request: Request,
+  ): Promise<IResponse<number>> {
+    const token = request.headers['token'] as string;
+    const visitor_id = this.jwtService.decode(token)['id'] as number;
+    return this.usersService.getReferralsPurchaseCount(visitor_id);
+  }
+
+  @UseGuards(CUserGuard)
+  @Post('potential-referral-earnings')
+  public getPotentialReferralEarnings(
+    @Req() request: Request,
+  ): Promise<IResponse<number>> {
+    const token = request.headers['token'] as string;
+    const visitor_id = this.jwtService.decode(token)['id'] as number;
+    return this.usersService.getPotentialReferralEarnings(visitor_id);
+  }
+
   /**
    * Telegram login/register link handler
    * GET /api/mainsite/users/tg-login/:id?expires=...&userData=...&signature=...

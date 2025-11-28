@@ -201,7 +201,7 @@ export class CUsersService extends CImagableService {
           return;
         }
 
-        await this.authenticateTgUser(from, langId);
+        await this.authenticateTgUser(from, langId, user.email);
       }
 
       // handle incoming plain email replies to bind account
@@ -258,6 +258,27 @@ export class CUsersService extends CImagableService {
         user.tg_active = false; // не удаляем, а деактивируем, чтобы можно было реактивировать
         await this.dataSource.getRepository(CUser).save(user);
         return;
+      }
+
+      // handle callback_query (button clicks)
+      if (dto.callback_query) {
+        const callbackData = dto.callback_query.data;
+        const tg_id = dto.callback_query.from.id;
+
+        if (callbackData === 'unbind_account') {
+          const user = await this.dataSource
+            .getRepository(CUser)
+            .findOneBy({ tg_id });
+          if (!user) return;
+
+          user.tg_id = null;
+          user.tg_username = null;
+          user.tg_active = false;
+
+          await this.dataSource.getRepository(CUser).save(user);
+          await this.tgBotService.userUnbindSuccess(tg_id, langId);
+          return;
+        }
       }
     } catch (err) {
       await this.errorsService.log('api.admin/CUsersService.onTgEvent', err);

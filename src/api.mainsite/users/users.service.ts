@@ -377,6 +377,8 @@ export class CUsersService extends CImagableService {
 
         if (!referrer) return { statusCode: 412, error: 'referrer not found' };
         referrer_id = referrer.id;
+        referrer.refRegCount += 1;
+        await this.dataSource.getRepository(CUser).save(referrer);
       }
 
       user = this.buildSafeCreate(dto, tz, parent_id, referrer_id);
@@ -655,6 +657,115 @@ export class CUsersService extends CImagableService {
     }
   }
 
+  public async trackReferralView(
+    parent_uuid: string,
+  ): Promise<IResponse<void>> {
+    try {
+      let parent = await this.dataSource
+        .getRepository(CUser)
+        .findOneBy({ uuid: parent_uuid });
+
+      if (!parent) {
+        parent = await this.dataSource
+          .getRepository(CUser)
+          .findOneBy({ ref_link: parent_uuid });
+      }
+
+      if (!parent) {
+        return { statusCode: 404, error: 'parent not found' };
+      }
+
+      parent.refViewCount += 1;
+      await this.dataSource.getRepository(CUser).save(parent);
+
+      return { statusCode: 200 };
+    } catch (err) {
+      const error = await this.errorsService.log(
+        'api.mainsite/CUsersService.trackReferralView',
+        err,
+      );
+      return { statusCode: 500, error };
+    }
+  }
+
+  public async getReferralsPurchaseCount(
+    user_id: number,
+  ): Promise<IResponse<number>> {
+    try {
+      const user = await this.dataSource
+        .getRepository(CUser)
+        .findOneBy({ id: user_id });
+
+      if (!user) {
+        return { statusCode: 404, error: 'user not found' };
+      }
+
+      // Получаем уникальных рефералов, которые совершили покупку (shoporder или outorder)
+      const refOrders = await this.dataSource
+        .getRepository(CReforder)
+        .createQueryBuilder('reforder')
+        .select('DISTINCT reforder.referee_email', 'referee_email')
+        .where('reforder.referrer_email = :referrer_email', {
+          referrer_email: user.email,
+        })
+        .andWhere('reforder.type IN (:...types)', {
+          types: ['shoporder', 'outorder'],
+        })
+        .getRawMany();
+
+      const count = refOrders.length;
+
+      return { statusCode: 200, data: count };
+    } catch (err) {
+      const error = await this.errorsService.log(
+        'api.mainsite/CUsersService.getReferralsPurchaseCount',
+        err,
+      );
+      return { statusCode: 500, error };
+    }
+  }
+
+  public async getPotentialReferralEarnings(
+    user_id: number,
+  ): Promise<IResponse<number>> {
+    try {
+      const user = await this.dataSource
+        .getRepository(CUser)
+        .findOneBy({ id: user_id });
+
+      if (!user) {
+        return { statusCode: 404, error: 'user not found' };
+      }
+
+      // Получаем количество уникальных покупающих рефералов и суммарные реферальные отчисления
+      const res: any = await this.dataSource
+        .getRepository(CReforder)
+        .createQueryBuilder('r')
+        .select('COUNT(DISTINCT r.referee_email)', 'purchasersCount')
+        .addSelect('COALESCE(SUM(r.amount), 0)', 'sumAmount')
+        .where('r.referrer_email = :email', { email: user.email })
+        .andWhere('r.type IN (:...types)', { types: ['shoporder', 'outorder'] })
+        .getRawOne();
+
+      const purchasersCount = parseInt(res?.purchasersCount || '0', 10);
+      const sumAmount = parseFloat(res?.sumAmount || '0');
+
+      const avgPerPurchaser =
+        purchasersCount > 0 ? sumAmount / purchasersCount : 0;
+      const totalReferralsRegistered = user.refRegCount || 0;
+      const remaining = Math.max(0, totalReferralsRegistered - purchasersCount);
+      const potential = avgPerPurchaser * remaining;
+
+      return { statusCode: 200, data: potential };
+    } catch (err) {
+      const error = await this.errorsService.log(
+        'api.mainsite/CUsersService.getPotentialReferralEarnings',
+        err,
+      );
+      return { statusCode: 500, error };
+    }
+  }
+
   ////////////////
   // utils
   ////////////////
@@ -788,6 +899,8 @@ export class CUsersService extends CImagableService {
       referral_percent: user.referral_percent,
       referral_buy_percent: user.referral_buy_percent,
       refEarnings,
+      refRegCount: user.refRegCount,
+      refViewCount: user.refViewCount,
       ref_link: user.ref_link,
       tg_username: user.tg_username,
       viewedGuidesCount: (user.viewedGuides ?? []).length,

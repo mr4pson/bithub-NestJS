@@ -92,6 +92,12 @@ export class CUser extends CEntity implements IChildable, IImagable {
   @Column({ nullable: false, default: 10 })
   public referral_buy_percent: number;
 
+  @Column({ nullable: false, default: 0 })
+  public refViewCount: number; // количество переходов по реферальной ссылке
+
+  @Column({ nullable: false, default: 0 })
+  public refRegCount: number; // количество зарегистрированных пользователей по реф ссылке
+
   @Column({ nullable: false, default: true })
   public subscribed: boolean; // подписка на рассылку
 

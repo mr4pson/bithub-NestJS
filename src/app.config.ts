@@ -50,7 +50,7 @@ const configs: IKeyValue<IConfig> = {
       'http://localhost:4200',
       'http://localhost:4201',
       'http://localhost:4205',
-      'http://localhost:55662',
+      'http://localhost:56316',
     ],
     //dbHost: "localhost",
     // dbHost: '185.151.245.92',
