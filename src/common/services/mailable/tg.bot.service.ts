@@ -220,7 +220,7 @@ export class CTgBotService extends CMailableService implements OnModuleInit {
       const statusCode = await this.sendMessageWithButton(
         tgId,
         content,
-        'Отвязать аккаунт',
+        'Unlink Account',
         'unbind_account',
       );
       return statusCode;
