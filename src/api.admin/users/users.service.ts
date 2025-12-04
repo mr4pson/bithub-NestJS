@@ -176,8 +176,6 @@ export class CUsersService extends CImagableService {
         const callbackData = dto.callback_query.data;
         const tg_id = dto.callback_query.from.id;
 
-        console.log(callbackData);
-
         if (callbackData === 'unbind_account') {
           const user = await this.dataSource
             .getRepository(CUser)
