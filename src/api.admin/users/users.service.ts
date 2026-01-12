@@ -315,7 +315,10 @@ export class CUsersService extends CImagableService {
         .update(signPayload)
         .digest('hex');
 
-      const url = `${cfg.mainsiteUrl}/${from.language_code}/login/${tgId}?expires=${expires}&userData=${userDataParam}&signature=${signature}`;
+      const languageCode =
+        from.language_code === 'uk' ? 'ua' : from.language_code;
+
+      const url = `${cfg.mainsiteUrl}/${languageCode}/login/${tgId}?expires=${expires}&userData=${userDataParam}&signature=${signature}`;
 
       await this.tgBotService.userAuthenticate(tgId, langId, url);
     } catch (err) {
